@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<title>Transport — Family Food Log Hub</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; overscroll-behavior-y: none; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .type-btn.active { background: #007AFF !important; color: white !important; border-color: #007AFF !important; }
+  .history-item:active { transform: scale(0.98); }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="sticky top-0 z-50 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-white px-5 py-4">
+  <div class="flex items-center gap-3">
+    <button onclick="history.back()" class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg hover:bg-white/25 transition">←</button>
+    <div>
+      <div class="text-xs opacity-70">Transport</div>
+      <div class="text-lg font-bold">Record Trip</div>
+    </div>
+  </div>
+</header>
+
+<div class="p-4 pb-24">
+  <!-- Smart History -->
+  <div id="history-section" class="mb-5">
+    <div class="flex justify-between items-center mb-3">
+      <div class="text-xs text-gray-400 uppercase tracking-wider">Select from History</div>
+      <button onclick="clearAllHistory()" class="text-xs text-red-400">Clear All</button>
+    </div>
+    <div id="history-list" class="flex flex-col gap-2"></div>
+  </div>
+
+  <div class="text-center text-gray-300 text-sm mb-4">— or enter manually —</div>
+
+  <!-- Type Selection -->
+  <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Transport Type</div>
+  <div class="grid grid-cols-4 gap-2 mb-5">
+    <button onclick="selectType('mtr')" id="type-mtr" class="type-btn bg-white border-2 border-gray-200 rounded-xl py-3 text-center transition-all active:scale-[0.97]">
+      <div class="text-2xl mb-1">🚇</div>
+      <div class="text-xs font-semibold">MTR</div>
+    </button>
+    <button onclick="selectType('bus')" id="type-bus" class="type-btn bg-white border-2 border-gray-200 rounded-xl py-3 text-center transition-all active:scale-[0.97]">
+      <div class="text-2xl mb-1">🚌</div>
+      <div class="text-xs font-semibold">Bus</div>
+    </button>
+    <button onclick="selectType('minibus')" id="type-minibus" class="type-btn bg-white border-2 border-gray-200 rounded-xl py-3 text-center transition-all active:scale-[0.97]">
+      <div class="text-2xl mb-1">🚐</div>
+      <div class="text-xs font-semibold">Minibus</div>
+    </button>
+    <button onclick="selectType('ferry')" id="type-ferry" class="type-btn bg-white border-2 border-gray-200 rounded-xl py-3 text-center transition-all active:scale-[0.97]">
+      <div class="text-2xl mb-1">⛴️</div>
+      <div class="text-xs font-semibold">Ferry</div>
+    </button>
+  </div>
+
+  <!-- Route / From-To -->
+  <div id="mtr-fields" class="hidden mb-4">
+    <div class="bg-white rounded-2xl p-4 mb-3 shadow-sm">
+      <div class="text-xs text-gray-400 mb-2">From Station</div>
+      <input type="text" id="mtr-from" placeholder="e.g. Yuen Long" class="w-full text-base text-gray-900 bg-transparent border-none outline-none">
+    </div>
+    <div class="bg-white rounded-2xl p-4 mb-3 shadow-sm">
+      <div class="text-xs text-gray-400 mb-2">To Station</div>
+      <input type="text" id="mtr-to" placeholder="e.g. Tsim Sha Tsui" class="w-full text-base text-gray-900 bg-transparent border-none outline-none">
+    </div>
+  </div>
+
+  <div id="route-field" class="hidden mb-4">
+    <div class="bg-white rounded-2xl p-4 shadow-sm">
+      <div class="text-xs text-gray-400 mb-2">Route Number</div>
+      <input type="text" id="route-num" placeholder="e.g. 268M, 970..." class="w-full text-base text-gray-900 bg-transparent border-none outline-none">
+    </div>
+  </div>
+
+  <!-- Amount -->
+  <div class="bg-white rounded-2xl p-5 mb-5 shadow-sm">
+    <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Fare (HKD)</div>
+    <div class="flex items-baseline gap-1">
+      <span class="text-3xl text-[#007AFF] font-bold">$</span>
+      <input type="number" id="transport-amount" placeholder="0.00" step="0.1"
+        class="text-4xl font-bold text-gray-900 bg-transparent border-none outline-none w-full">
+    </div>
+  </div>
+
+  <!-- Quick Fares -->
+  <div class="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-1" id="quick-fares"></div>
+
+  <!-- Save -->
+  <button onclick="saveTransport()" class="w-full bg-[#007AFF] text-white rounded-2xl py-4 text-lg font-bold shadow-lg shadow-blue-500/30 active:scale-[0.98] transition">
+    🚌 Save Trip
+  </button>
+
+  <!-- Octopus Balance -->
+  <div class="mt-6 bg-white rounded-2xl p-4 shadow-sm text-center">
+    <div class="text-xs text-gray-400 mb-1">Octopus Balance</div>
+    <div class="text-3xl font-bold text-[#007AFF]" id="octopus-balance">$0.00</div>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3.5 rounded-xl text-sm font-semibold z-[100] shadow-2xl hidden transition-opacity duration-300"></div>
+
+<script>
+const DEFAULT_HISTORY = [
+  { id: 'th_001', type: 'bus', route: '268M', from: '', to: '', amount: 10.1, useCount: 5, lastUsed: '2026-07-22T08:30:00' },
+  { id: 'th_002', type: 'mtr', route: '', from: 'Yuen Long', to: 'Tsim Sha Tsui', amount: 25.0, useCount: 12, lastUsed: '2026-07-22T18:00:00' },
+  { id: 'th_003', type: 'mtr', route: '', from: 'Central', to: 'Causeway Bay', amount: 14.5, useCount: 3, lastUsed: '2026-07-21T12:00:00' },
+  { id: 'th_004', type: 'bus', route: '970', from: '', to: '', amount: 12.1, useCount: 2, lastUsed: '2026-07-20T09:00:00' },
+  { id: 'th_005', type: 'minibus', route: '28M', from: '', to: '', amount: 7.2, useCount: 2, lastUsed: '2026-07-19T15:00:00' }
+];
+
+const TYPE_ICONS = { mtr: '🚇', bus: '🚌', minibus: '🚐', ferry: '⛴️' };
+const TYPE_LABELS = { mtr: 'MTR', bus: 'Bus', minibus: 'Minibus', ferry: 'Ferry' };
+
+let selectedType = null;
+
+function init() {
+  let history = JSON.parse(localStorage.getItem('fflh_transportHistory') || 'null');
+  if (!history) {
+    history = DEFAULT_HISTORY;
+    localStorage.setItem('fflh_transportHistory', JSON.stringify(history));
+  }
+  renderHistory();
+  updateOctopusBalance();
+}
+
+function renderHistory() {
+  const history = JSON.parse(localStorage.getItem('fflh_transportHistory') || '[]');
+  const container = document.getElementById('history-list');
+
+  if (history.length === 0) {
+    document.getElementById('history-section').classList.add('hidden');
+    return;
+  }
+  document.getElementById('history-section').classList.remove('hidden');
+
+  // Sort by useCount desc, then lastUsed desc
+  history.sort((a, b) => b.useCount - a.useCount || new Date(b.lastUsed) - new Date(a.lastUsed));
+
+  container.innerHTML = history.slice(0, 6).map(h => {
+    const label = h.type === 'mtr'
+      ? `${h.from} → ${h.to}`
+      : `${TYPE_LABELS[h.type]} ${h.route}`;
+    return `
+      <button onclick="applyHistory('${h.id}')" class="history-item bg-white rounded-xl p-3.5 flex justify-between items-center shadow-sm transition-all w-full text-left">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">${TYPE_ICONS[h.type]}</span>
+          <div>
+            <div class="font-semibold text-gray-900 text-sm">${label}</div>
+            <div class="text-xs text-gray-400">Used ${h.useCount}x • Last: ${formatDate(h.lastUsed)}</div>
+          </div>
+        </div>
+        <span class="text-lg font-bold text-[#007AFF]">$${h.amount.toFixed(1)}</span>
+      </button>
+    `;
+  }).join('');
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-HK', { month: 'short', day: 'numeric' });
+}
+
+function applyHistory(id) {
+  const history = JSON.parse(localStorage.getItem('fflh_transportHistory') || '[]');
+  const h = history.find(x => x.id === id);
+  if (!h) return;
+
+  selectType(h.type);
+  document.getElementById('transport-amount').value = h.amount;
+
+  if (h.type === 'mtr') {
+    document.getElementById('mtr-from').value = h.from;
+    document.getElementById('mtr-to').value = h.to;
+  } else {
+    document.getElementById('route-num').value = h.route;
+  }
+}
+
+function selectType(type) {
+  selectedType = type;
+  document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('type-' + type).classList.add('active');
+
+  document.getElementById('mtr-fields').classList.toggle('hidden', type !== 'mtr');
+  document.getElementById('route-field').classList.toggle('hidden', type === 'mtr');
+
+  // Quick fares
+  const fares = type === 'mtr'
+    ? [12.0, 14.5, 18.5, 25.0, 30.0]
+    : type === 'bus'
+    ? [4.5, 7.2, 10.1, 12.1, 22.0]
+    : type === 'minibus'
+    ? [4.0, 5.5, 7.2, 9.0]
+    : [15.0, 25.0, 35.0];
+
+  document.getElementById('quick-fares').innerHTML = fares.map(f => `
+    <button onclick="document.getElementById('transport-amount').value=${f}" class="bg-white border border-gray-200 rounded-full px-4 py-2 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$${f.toFixed(1)}</button>
+  `).join('');
+}
+
+function saveTransport() {
+  const amount = parseFloat(document.getElementById('transport-amount').value);
+  if (!amount || amount <= 0) { showToast('❌ Please enter fare'); return; }
+  if (!selectedType) { showToast('❌ Please select transport type'); return; }
+
+  let route = '', from = '', to = '';
+  if (selectedType === 'mtr') {
+    from = document.getElementById('mtr-from').value.trim();
+    to = document.getElementById('mtr-to').value.trim();
+    if (!from || !to) { showToast('❌ Please enter from and to stations'); return; }
+  } else {
+    route = document.getElementById('route-num').value.trim();
+    if (!route) { showToast('❌ Please enter route number'); return; }
+  }
+
+  // Save transaction
+  const tx = {
+    id: 'tx_' + Date.now(),
+    date: new Date().toISOString(),
+    type: 'transport',
+    category: 'transport',
+    item: selectedType === 'mtr' ? `MTR ${from}-${to}` : `${TYPE_LABELS[selectedType]} ${route}`,
+    amount: amount,
+    payment: 'octopus',
+    store: TYPE_LABELS[selectedType],
+    notes: '',
+    isCombo: false
+  };
+
+  const txs = JSON.parse(localStorage.getItem('fflh_transactions') || '[]');
+  txs.unshift(tx);
+  localStorage.setItem('fflh_transactions', JSON.stringify(txs));
+
+  // Update Octopus balance
+  const octBal = parseFloat(localStorage.getItem('fflh_octopusBalance') || '0');
+  localStorage.setItem('fflh_octopusBalance', (octBal - amount).toFixed(2));
+
+  // Update history
+  updateTransportHistory(selectedType, route, from, to, amount);
+
+  showToast(`✅ Saved: ${tx.item} $${amount.toFixed(1)}`);
+  updateOctopusBalance();
+  resetForm();
+}
+
+function updateTransportHistory(type, route, from, to, amount) {
+  let history = JSON.parse(localStorage.getItem('fflh_transportHistory') || '[]');
+  const existing = history.find(h =>
+    h.type === type &&
+    h.route === route &&
+    h.from === from &&
+    h.to === to
+  );
+
+  if (existing) {
+    existing.amount = amount;
+    existing.useCount++;
+    existing.lastUsed = new Date().toISOString();
+  } else {
+    history.push({
+      id: 'th_' + Date.now(),
+      type, route, from, to, amount,
+      useCount: 1,
+      lastUsed: new Date().toISOString()
+    });
+  }
+  localStorage.setItem('fflh_transportHistory', JSON.stringify(history));
+  renderHistory();
+}
+
+function clearAllHistory() {
+  if (!confirm('Clear all transport history?')) return;
+  localStorage.removeItem('fflh_transportHistory');
+  renderHistory();
+}
+
+function resetForm() {
+  document.getElementById('transport-amount').value = '';
+  document.getElementById('mtr-from').value = '';
+  document.getElementById('mtr-to').value = '';
+  document.getElementById('route-num').value = '';
+  document.querySelectorAll('.type-btn').forEach(btn => btn.classList.remove('active'));
+  selectedType = null;
+  document.getElementById('mtr-fields').classList.add('hidden');
+  document.getElementById('route-field').classList.add('hidden');
+  document.getElementById('quick-fares').innerHTML = '';
+}
+
+function updateOctopusBalance() {
+  const bal = parseFloat(localStorage.getItem('fflh_octopusBalance') || '0');
+  document.getElementById('octopus-balance').textContent = '$' + bal.toFixed(2);
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.classList.add('hidden'), 300); }, 2500);
+}
+
+document.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

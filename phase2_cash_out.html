@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<title>Cash Out — Family Food Log Hub</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; overscroll-behavior-y: none; }
+  .hide-scrollbar::-webkit-scrollbar { display: none; }
+  .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .cat-btn.active { border-color: #007AFF !important; background: #E5F2FF !important; }
+  .chip-btn.active { background: #007AFF !important; border-color: #007AFF !important; color: white !important; }
+  .pulse-record { animation: pulse-red 1.5s infinite; }
+  @keyframes pulse-red {
+    0% { box-shadow: 0 0 0 0 rgba(255,59,48,0.7); }
+    70% { box-shadow: 0 0 0 20px rgba(255,59,48,0); }
+    100% { box-shadow: 0 0 0 0 rgba(255,59,48,0); }
+  }
+  .slide-up { animation: slideUp 0.3s ease-out; }
+  @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+  .fade-in { animation: fadeIn 0.2s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ========== HEADER ========== -->
+<header class="sticky top-0 z-50 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-white px-5 py-4">
+  <div class="flex items-center gap-3">
+    <button onclick="history.back()" class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg hover:bg-white/25 transition">←</button>
+    <div>
+      <div class="text-xs opacity-70">Cash Out</div>
+      <div class="text-lg font-bold">Record Expense</div>
+    </div>
+  </div>
+</header>
+
+<!-- ========== MODE TABS ========== -->
+<div class="bg-white border-b border-gray-200 p-1 flex gap-1 sticky top-[72px] z-40">
+  <button onclick="switchMode('manual')" id="tab-manual" class="flex-1 py-3 rounded-xl text-sm font-semibold transition-all bg-[#007AFF] text-white">⌨️ Manual</button>
+  <button onclick="switchMode('camera')" id="tab-camera" class="flex-1 py-3 rounded-xl text-sm font-semibold transition-all bg-transparent text-gray-500">📷 Camera</button>
+  <button onclick="switchMode('voice')" id="tab-voice" class="flex-1 py-3 rounded-xl text-sm font-semibold transition-all bg-transparent text-gray-500">🎤 Voice</button>
+</div>
+
+<!-- ========== MODE 1: MANUAL INPUT ========== -->
+<div id="mode-manual" class="p-4 pb-24">
+  <!-- Amount -->
+  <div class="bg-white rounded-2xl p-5 mb-4 shadow-sm">
+    <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Amount (HKD)</div>
+    <div class="flex items-baseline gap-1">
+      <span class="text-3xl text-[#007AFF] font-bold">$</span>
+      <input type="number" id="manual-amount" placeholder="0.00" step="0.1"
+        class="text-4xl font-bold text-gray-900 bg-transparent border-none outline-none w-full"
+        oninput="validateAmount(this)">
+    </div>
+  </div>
+
+  <!-- Category Grid -->
+  <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Select Category</div>
+  <div class="grid grid-cols-3 gap-3 mb-4" id="category-grid"></div>
+
+  <!-- Item Chips -->
+  <div id="item-chips-section" class="hidden mb-4">
+    <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Select Item</div>
+    <div id="item-chips" class="flex flex-wrap gap-2"></div>
+  </div>
+
+  <!-- Quick Templates -->
+  <div class="mb-4">
+    <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Quick Templates</div>
+    <div class="flex gap-2 overflow-x-auto hide-scrollbar pb-1" id="templates-container"></div>
+  </div>
+
+  <!-- Store -->
+  <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm">
+    <div class="text-xs text-gray-400 mb-2">Store / Location</div>
+    <input type="text" id="manual-store" placeholder="e.g. Wet Market, ParknShop..."
+      class="w-full text-base text-gray-900 bg-transparent border-none outline-none">
+  </div>
+
+  <!-- Notes -->
+  <div class="bg-white rounded-2xl p-4 mb-4 shadow-sm">
+    <div class="text-xs text-gray-400 mb-2">Notes (optional)</div>
+    <input type="text" id="manual-notes" placeholder="Any details..."
+      class="w-full text-base text-gray-900 bg-transparent border-none outline-none">
+  </div>
+
+  <!-- Save -->
+  <button onclick="saveManual()" class="w-full bg-[#34C759] text-white rounded-2xl py-4 text-lg font-bold shadow-lg shadow-green-500/30 active:scale-[0.98] transition">
+    💾 Save Expense
+  </button>
+</div>
+
+<!-- ========== MODE 2: CAMERA ID ========== -->
+<div id="mode-camera" class="hidden p-4 pb-24">
+  <div class="bg-white rounded-2xl p-6 text-center shadow-sm mb-4">
+    <div class="w-20 h-20 bg-gradient-to-br from-[#007AFF] to-[#5856D6] rounded-3xl mx-auto mb-4 flex items-center justify-center text-4xl">
+      📷
+    </div>
+    <div class="text-lg font-bold text-gray-900 mb-2">Camera ID</div>
+    <div class="text-sm text-gray-500 mb-5">Take a photo of the item. AI will identify it automatically.</div>
+    <button onclick="openCamera()" class="w-full bg-[#007AFF] text-white rounded-2xl py-4 text-base font-semibold active:scale-[0.98] transition">
+      📷 Take Photo
+    </button>
+    <input type="file" accept="image/*" capture="environment" id="camera-input" class="hidden" onchange="handleCameraPhoto(event)">
+  </div>
+
+  <!-- Camera Result -->
+  <div id="camera-result" class="hidden bg-white rounded-2xl p-5 shadow-sm slide-up">
+    <div class="flex items-center gap-3 mb-4">
+      <div id="cam-result-icon" class="w-14 h-14 bg-gray-100 rounded-xl flex items-center justify-center text-3xl">❓</div>
+      <div>
+        <div id="cam-result-name" class="text-base font-bold text-gray-900">Identifying...</div>
+        <div id="cam-result-cat" class="text-sm text-gray-500">Please wait...</div>
+        <div id="cam-result-confidence" class="text-sm text-green-600 font-semibold"></div>
+      </div>
+    </div>
+    <div class="text-xs text-gray-400 mb-2">Amount (HKD)</div>
+    <div class="flex items-baseline gap-1 mb-4">
+      <span class="text-2xl text-[#007AFF] font-bold">$</span>
+      <input type="number" id="cam-amount" placeholder="0.00" step="0.1"
+        class="text-3xl font-bold text-gray-900 bg-gray-100 rounded-xl px-3 py-2 border-none outline-none w-full">
+    </div>
+    <div class="flex gap-3">
+      <button onclick="saveCameraResult()" class="flex-1 bg-[#34C759] text-white rounded-xl py-3.5 text-sm font-semibold active:scale-[0.98] transition">
+        ✅ Correct, Save
+      </button>
+      <button onclick="resetCamera()" class="flex-1 bg-[#ff3b30] text-white rounded-xl py-3.5 text-sm font-semibold active:scale-[0.98] transition">
+        ❌ Wrong, Retry
+      </button>
+    </div>
+    <button onclick="pickManualFromCamera()" class="w-full mt-3 bg-gray-100 text-gray-700 rounded-xl py-3 text-sm font-medium active:scale-[0.98] transition">
+      📝 Pick Manually Instead
+    </button>
+  </div>
+</div>
+
+<!-- ========== MODE 3: VOICE INPUT ========== -->
+<div id="mode-voice" class="hidden p-4 pb-24">
+  <!-- Voice Mode Selector -->
+  <div class="bg-white rounded-2xl p-4 shadow-sm mb-4">
+    <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Voice Mode</div>
+    <div class="flex flex-col gap-2">
+      <button onclick="setVoiceMode('batch')" id="vm-batch" class="text-left p-3.5 rounded-xl bg-[#007AFF] text-white transition-all active:scale-[0.98]">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🎙️</span>
+          <div>
+            <div class="font-bold text-sm">Batch Voice</div>
+            <div class="text-xs opacity-80">Say everything at once</div>
+          </div>
+        </div>
+      </button>
+      <button onclick="setVoiceMode('item')" id="vm-item" class="text-left p-3.5 rounded-xl bg-gray-100 text-gray-900 transition-all active:scale-[0.98]">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🎤</span>
+          <div>
+            <div class="font-bold text-sm">Item by Item</div>
+            <div class="text-xs text-gray-500">One item at a time</div>
+          </div>
+        </div>
+      </button>
+      <button onclick="setVoiceMode('market')" id="vm-market" class="text-left p-3.5 rounded-xl bg-gray-100 text-gray-900 transition-all active:scale-[0.98]">
+        <div class="flex items-center gap-3">
+          <span class="text-2xl">🏪</span>
+          <div>
+            <div class="font-bold text-sm">Market Mode</div>
+            <div class="text-xs text-gray-500">Pause & resume while shopping</div>
+          </div>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Batch Voice Panel -->
+  <div id="voice-batch-panel" class="bg-white rounded-2xl p-6 text-center shadow-sm">
+    <div id="voice-status" class="text-sm text-gray-500 mb-6">
+      Hold the button and say:<br>
+      <em class="text-gray-400">"Apple thirty-five, Banana twelve, Pork eighty"</em>
+    </div>
+    <button id="voice-btn"
+      onmousedown="startVoice()" onmouseup="stopVoice()"
+      ontouchstart="startVoice()" ontouchend="stopVoice()"
+      class="w-24 h-24 rounded-full bg-gradient-to-br from-[#ff3b30] to-[#ff6b6b] text-white text-4xl shadow-xl shadow-red-500/40 active:scale-95 transition-all select-none">
+      🎤
+    </button>
+    <div class="text-xs text-gray-400 mt-3">Hold to Record</div>
+
+    <!-- Voice Results -->
+    <div id="voice-results" class="hidden mt-6 text-left">
+      <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Parsed Items</div>
+      <div id="parsed-items" class="flex flex-col gap-2"></div>
+      <div id="voice-total" class="flex justify-between items-center border-t-2 border-gray-200 mt-3 pt-3">
+        <span class="font-bold text-gray-900">Total</span>
+        <span class="text-xl font-bold text-[#007AFF]" id="voice-total-amount">$0</span>
+      </div>
+      <button onclick="saveVoiceItems()" class="w-full bg-[#34C759] text-white rounded-xl py-3.5 text-sm font-bold mt-4 shadow-lg shadow-green-500/30 active:scale-[0.98] transition">
+        💾 Save All Items
+      </button>
+    </div>
+  </div>
+
+  <!-- Item-by-Item Panel -->
+  <div id="voice-item-panel" class="hidden bg-white rounded-2xl p-6 shadow-sm">
+    <div id="item-step-indicator" class="text-sm text-gray-500 mb-4 text-center">Item <span id="current-item-num">1</span> of ?</div>
+    <div id="item-voice-status" class="text-sm text-gray-500 mb-6 text-center">
+      What did you buy?<br>
+      <em class="text-gray-400">Say: "Apple thirty-five dollars"</em>
+    </div>
+    <button id="item-voice-btn"
+      onmousedown="startItemVoice()" onmouseup="stopItemVoice()"
+      ontouchstart="startItemVoice()" ontouchend="stopItemVoice()"
+      class="w-24 h-24 rounded-full bg-gradient-to-br from-[#ff3b30] to-[#ff6b6b] text-white text-4xl shadow-xl shadow-red-500/40 active:scale-95 transition-all select-none mx-auto block">
+      🎤
+    </button>
+    <div class="text-xs text-gray-400 mt-3 text-center">Hold to Record</div>
+    <div id="item-voice-result" class="hidden mt-4"></div>
+    <div id="item-voice-actions" class="hidden flex gap-3 mt-4">
+      <button onclick="confirmItemVoice()" class="flex-1 bg-[#34C759] text-white rounded-xl py-3 text-sm font-semibold">✅ Confirm</button>
+      <button onclick="retryItemVoice()" class="flex-1 bg-gray-100 text-gray-700 rounded-xl py-3 text-sm font-semibold">🔄 Retry</button>
+    </div>
+    <button onclick="finishItemVoice()" class="w-full mt-4 bg-[#007AFF] text-white rounded-xl py-3 text-sm font-bold active:scale-[0.98] transition">
+      ✅ Finish & Save All
+    </button>
+  </div>
+
+  <!-- Market Mode Panel -->
+  <div id="voice-market-panel" class="hidden bg-white rounded-2xl p-6 shadow-sm">
+    <div class="flex justify-between items-center mb-4">
+      <div class="text-sm font-bold text-gray-900">Market Mode</div>
+      <div id="market-timer" class="text-sm text-[#007AFF] font-mono">00:00</div>
+    </div>
+    <div id="market-status" class="text-sm text-gray-500 mb-4 text-center">Press record at each stall</div>
+    <div class="flex justify-center gap-4 mb-4">
+      <button id="market-record-btn" onclick="toggleMarketRecord()"
+        class="w-20 h-20 rounded-full bg-gradient-to-br from-[#ff3b30] to-[#ff6b6b] text-white text-3xl shadow-xl shadow-red-500/40 active:scale-95 transition-all">
+        🔴
+      </button>
+      <button onclick="finishMarket()" class="w-20 h-20 rounded-full bg-[#34C759] text-white text-3xl shadow-lg shadow-green-500/30 active:scale-95 transition-all">
+        ✅
+      </button>
+    </div>
+    <div class="text-xs text-gray-400 text-center mb-4">Record / Finish</div>
+    <div id="market-segments" class="flex flex-col gap-2 max-h-40 overflow-y-auto hide-scrollbar"></div>
+  </div>
+
+  <!-- Combo Voice -->
+  <div class="bg-amber-50 rounded-2xl p-4 mt-4 border border-amber-200">
+    <div class="text-sm text-amber-700 font-bold mb-2">🔥 Combo Voice (New!)</div>
+    <div class="text-xs text-amber-600/80 mb-3">Say: <em>"Soup pork veg corn fifty-five dollars"</em></div>
+    <button onclick="simulateComboVoice()" class="w-full bg-[#FF9500] text-white rounded-xl py-3 text-sm font-semibold active:scale-[0.98] transition">
+      🍲 Try Combo Demo
+    </button>
+    <div id="combo-result" class="hidden mt-3"></div>
+  </div>
+</div>
+
+<!-- ========== TOAST ========== -->
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3.5 rounded-xl text-sm font-semibold z-[100] shadow-2xl hidden transition-opacity duration-300"></div>
+
+<!-- ========== JAVASCRIPT ========== -->
+<script>
+// ===================== DATA =====================
+const CATEGORIES = {
+  fruit:     { icon: '🍎', label: 'Fruit',     items: ['Apple','Pears','Banana','Orange','Grapes','Mango','Watermelon'] },
+  vegetable: { icon: '🥬', label: 'Veg',       items: ['Bell Pepper','Carrots','Mushroom','Corn','Cucumber','Eggplant','Ginger','Scallion','Tomato','Onion'] },
+  meat:      { icon: '🥩', label: 'Meat',      items: ['Pork','Beef','Chicken','Minced Pork','Pork Ribs','Pork Belly'] },
+  fish:      { icon: '🐟', label: 'Fish',      items: ['Salmon','Threadfin','Grass Carp','Fish Fillet','Prawn','Squid'] },
+  grocery:   { icon: '🍚', label: 'Grocery',   items: ['Rice','Oil','Salt','Sugar','Light Soy Sauce','Dark Soy Sauce','Vinegar','Oyster Sauce','Cornstarch'] },
+  other:     { icon: '📦', label: 'Other',     items: ['Household','Baby Items','Personal Care','Stationery'] }
+};
+
+const TEMPLATES = [
+  { item: 'Apple', cat: 'fruit', amount: 35, icon: '🍎' },
+  { item: 'Banana', cat: 'fruit', amount: 12, icon: '🍌' },
+  { item: 'Pork Mince', cat: 'meat', amount: 20, icon: '🥩' },
+  { item: 'Chicken', cat: 'meat', amount: 45, icon: '🍗' },
+  { item: 'Rice', cat: 'grocery', amount: 45, icon: '🍚' },
+  { item: 'Light Soy Sauce', cat: 'grocery', amount: 18, icon: '🍶' },
+  { item: 'Corn', cat: 'vegetable', amount: 10, icon: '🌽' },
+  { item: 'Salmon', cat: 'fish', amount: 60, icon: '🐟' }
+];
+
+// ===================== STATE =====================
+let selectedCat = null, selectedItem = null;
+let voiceMode = 'batch', isRecording = false;
+let voiceItems = [], itemVoiceItems = [], marketSegments = [];
+let marketTimerInterval = null, marketSeconds = 0;
+let marketRecording = false;
+
+// ===================== INIT =====================
+document.addEventListener('DOMContentLoaded', () => {
+  renderCategories();
+  renderTemplates();
+});
+
+function renderCategories() {
+  const grid = document.getElementById('category-grid');
+  grid.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) => `
+    <button onclick="selectCategory('${key}')" class="cat-btn bg-white border-2 border-gray-200 rounded-2xl p-4 text-center transition-all active:scale-[0.97]" data-cat="${key}">
+      <div class="text-3xl mb-1">${cat.icon}</div>
+      <div class="text-xs font-semibold text-gray-800">${cat.label}</div>
+    </button>
+  `).join('');
+}
+
+function renderTemplates() {
+  const container = document.getElementById('templates-container');
+  container.innerHTML = TEMPLATES.map(t => `
+    <button onclick="applyTemplate('${t.item}', '${t.cat}', ${t.amount})"
+      class="flex items-center gap-2 bg-white border border-gray-200 rounded-full px-4 py-2.5 text-sm whitespace-nowrap active:scale-95 transition">
+      <span>${t.icon}</span>
+      <span class="text-gray-700">${t.item}</span>
+      <span class="text-[#007AFF] font-semibold">$${t.amount}</span>
+    </button>
+  `).join('');
+}
+
+// ===================== MODE SWITCHING =====================
+function switchMode(mode) {
+  ['manual','camera','voice'].forEach(m => {
+    document.getElementById('mode-' + m).classList.add('hidden');
+    const tab = document.getElementById('tab-' + m);
+    tab.className = 'flex-1 py-3 rounded-xl text-sm font-semibold transition-all bg-transparent text-gray-500';
+  });
+  document.getElementById('mode-' + mode).classList.remove('hidden');
+  const activeTab = document.getElementById('tab-' + mode);
+  activeTab.className = 'flex-1 py-3 rounded-xl text-sm font-semibold transition-all bg-[#007AFF] text-white';
+}
+
+// ===================== MANUAL MODE =====================
+function selectCategory(cat) {
+  selectedCat = cat;
+  selectedItem = null;
+  document.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.cat === cat);
+  });
+  const chipsDiv = document.getElementById('item-chips');
+  const container = document.getElementById('item-chips');
+  container.innerHTML = CATEGORIES[cat].items.map(item => `
+    <button onclick="selectItem(this, '${item}')" class="chip-btn bg-gray-100 border border-gray-200 rounded-full px-4 py-2 text-sm text-gray-800 font-medium transition-all active:scale-95">
+      ${item}
+    </button>
+  `).join('');
+  document.getElementById('item-chips-section').classList.remove('hidden');
+  document.getElementById('item-chips-section').classList.add('slide-up');
+}
+
+function selectItem(btn, item) {
+  selectedItem = item;
+  document.querySelectorAll('.chip-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function applyTemplate(item, cat, amount) {
+  document.getElementById('manual-amount').value = amount;
+  selectCategory(cat);
+  setTimeout(() => {
+    document.querySelectorAll('.chip-btn').forEach(btn => {
+      if (btn.textContent.trim() === item) selectItem(btn, item);
+    });
+  }, 50);
+}
+
+function validateAmount(input) {
+  if (input.value < 0) input.value = 0;
+}
+
+function saveManual() {
+  const amount = parseFloat(document.getElementById('manual-amount').value);
+  const store = document.getElementById('manual-store').value.trim();
+  const notes = document.getElementById('manual-notes').value.trim();
+
+  if (!amount || amount <= 0) { showToast('❌ Please enter amount'); return; }
+  if (!selectedItem) { showToast('❌ Please select an item'); return; }
+
+  const tx = {
+    id: 'tx_' + Date.now(),
+    date: new Date().toISOString(),
+    type: 'cash_out',
+    category: selectedCat,
+    item: selectedItem,
+    amount: amount,
+    payment: 'cash',
+    store: store || 'Unknown',
+    notes: notes,
+    isCombo: false
+  };
+  saveTransaction(tx);
+  updateTemplateUsage(selectedItem, selectedCat, amount);
+  showToast(`✅ Saved: ${selectedItem} $${amount.toFixed(1)}`);
+  resetManual();
+}
+
+function resetManual() {
+  document.getElementById('manual-amount').value = '';
+  document.getElementById('manual-store').value = '';
+  document.getElementById('manual-notes').value = '';
+  selectedCat = null; selectedItem = null;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('item-chips-section').classList.add('hidden');
+}
+
+// ===================== CAMERA MODE =====================
+function openCamera() {
+  document.getElementById('camera-input').click();
+}
+
+function handleCameraPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  showToast('📷 Analyzing photo...');
+
+  // Simulate AI identification (replace with Gemini Vision API)
+  setTimeout(() => {
+    const mockResults = [
+      { name: 'Apple', cat: 'fruit', icon: '🍎', confidence: 92 },
+      { name: 'Banana', cat: 'fruit', icon: '🍌', confidence: 88 },
+      { name: 'Pork', cat: 'meat', icon: '🥩', confidence: 85 },
+      { name: 'Carrots', cat: 'vegetable', icon: '🥕', confidence: 90 }
+    ];
+    const result = mockResults[Math.floor(Math.random() * mockResults.length)];
+
+    document.getElementById('cam-result-icon').textContent = result.icon;
+    document.getElementById('cam-result-name').textContent = result.name;
+    document.getElementById('cam-result-cat').textContent = `Category: ${CATEGORIES[result.cat].label} ${CATEGORIES[result.cat].icon}`;
+    document.getElementById('cam-result-confidence').textContent = `Confidence: ${result.confidence}%`;
+    document.getElementById('cam-amount').value = '';
+    document.getElementById('camera-result').classList.remove('hidden');
+    document.getElementById('camera-result').dataset.detectedItem = result.name;
+    document.getElementById('camera-result').dataset.detectedCat = result.cat;
+  }, 1500);
+}
+
+function saveCameraResult() {
+  const amount = parseFloat(document.getElementById('cam-amount').value);
+  if (!amount || amount <= 0) { showToast('❌ Please enter amount'); return; }
+
+  const resultDiv = document.getElementById('camera-result');
+  const item = resultDiv.dataset.detectedItem;
+  const cat = resultDiv.dataset.detectedCat;
+
+  const tx = {
+    id: 'tx_' + Date.now(),
+    date: new Date().toISOString(),
+    type: 'cash_out',
+    category: cat,
+    item: item,
+    amount: amount,
+    payment: 'cash',
+    store: 'Camera ID',
+    notes: '',
+    isCombo: false
+  };
+  saveTransaction(tx);
+  updateTemplateUsage(item, cat, amount);
+  showToast(`✅ Saved: ${item} $${amount.toFixed(1)}`);
+  resetCamera();
+}
+
+function resetCamera() {
+  document.getElementById('camera-result').classList.add('hidden');
+  document.getElementById('camera-input').value = '';
+}
+
+function pickManualFromCamera() {
+  switchMode('manual');
+  showToast('📝 Switched to Manual mode');
+}
+
+// ===================== VOICE MODE =====================
+function setVoiceMode(mode) {
+  voiceMode = mode;
+  ['batch','item','market'].forEach(m => {
+    const btn = document.getElementById('vm-' + m);
+    if (m === mode) {
+      btn.className = 'text-left p-3.5 rounded-xl bg-[#007AFF] text-white transition-all active:scale-[0.98]';
+    } else {
+      btn.className = 'text-left p-3.5 rounded-xl bg-gray-100 text-gray-900 transition-all active:scale-[0.98]';
+    }
+  });
+
+  document.getElementById('voice-batch-panel').classList.toggle('hidden', mode !== 'batch');
+  document.getElementById('voice-item-panel').classList.toggle('hidden', mode !== 'item');
+  document.getElementById('voice-market-panel').classList.toggle('hidden', mode !== 'market');
+}
+
+// ---- Batch Voice ----
+function startVoice() {
+  isRecording = true;
+  const btn = document.getElementById('voice-btn');
+  btn.classList.add('pulse-record');
+  document.getElementById('voice-status').innerHTML = '<span class="text-[#ff3b30] font-bold">🔴 Recording...</span><br>Listening for items and prices';
+
+  // Try Web Speech API
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const rec = new SpeechRecognition();
+    rec.lang = 'en-US';
+    rec.continuous = true;
+    rec.interimResults = true;
+    window.currentRecognition = rec;
+    rec.onresult = (e) => {
+      const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ');
+      document.getElementById('voice-status').innerHTML = `<span class="text-gray-600">Hearing: "${transcript}"</span>`;
+    };
+    rec.start();
+  }
+}
+
+function stopVoice() {
+  if (!isRecording) return;
+  isRecording = false;
+  const btn = document.getElementById('voice-btn');
+  btn.classList.remove('pulse-record');
+  document.getElementById('voice-status').innerHTML = 'Processing... <span class="text-[#007AFF]">⚡ AI parsing</span>';
+
+  if (window.currentRecognition) {
+    window.currentRecognition.stop();
+  }
+
+  // Simulate parsing (replace with Gemini API)
+  setTimeout(() => {
+    const mockItems = [
+      { name: 'Apple', cat: 'fruit', amount: 35 },
+      { name: 'Banana', cat: 'fruit', amount: 12 },
+      { name: 'Pork', cat: 'meat', amount: 80 }
+    ];
+    voiceItems = mockItems;
+    renderVoiceResults();
+  }, 1200);
+}
+
+function renderVoiceResults() {
+  const container = document.getElementById('parsed-items');
+  let total = 0;
+  container.innerHTML = voiceItems.map((item, i) => {
+    total += item.amount;
+    return `
+      <div class="flex justify-between items-center bg-gray-100 p-3 rounded-xl">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">${CATEGORIES[item.cat].icon}</span>
+          <div>
+            <div class="font-semibold text-gray-900 text-sm">${item.name}</div>
+            <div class="text-xs text-gray-500 capitalize">${item.cat}</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-lg font-bold text-[#007AFF]">$${item.amount}</span>
+          <button onclick="removeVoiceItem(${i})" class="w-7 h-7 rounded-lg bg-red-100 text-red-500 text-xs flex items-center justify-center">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  document.getElementById('voice-total-amount').textContent = '$' + total.toFixed(1);
+  document.getElementById('voice-results').classList.remove('hidden');
+  document.getElementById('voice-status').innerHTML = `Parsed <strong>${voiceItems.length} items</strong> from your voice! ✅`;
+}
+
+function removeVoiceItem(idx) {
+  voiceItems.splice(idx, 1);
+  renderVoiceResults();
+  if (voiceItems.length === 0) {
+    document.getElementById('voice-results').classList.add('hidden');
+    document.getElementById('voice-status').innerHTML = 'Hold the button and say:<br><em class="text-gray-400">"Apple thirty-five, Banana twelve, Pork eighty"</em>';
+  }
+}
+
+function saveVoiceItems() {
+  voiceItems.forEach(item => {
+    const tx = {
+      id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+      date: new Date().toISOString(),
+      type: 'cash_out',
+      category: item.cat,
+      item: item.name,
+      amount: item.amount,
+      payment: 'cash',
+      store: 'Voice Entry',
+      notes: '',
+      isCombo: false
+    };
+    saveTransaction(tx);
+    updateTemplateUsage(item.name, item.cat, item.amount);
+  });
+  const total = voiceItems.reduce((s, i) => s + i.amount, 0);
+  showToast(`✅ ${voiceItems.length} items saved! Total: $${total.toFixed(1)}`);
+  voiceItems = [];
+  document.getElementById('voice-results').classList.add('hidden');
+  document.getElementById('voice-status').innerHTML = 'Hold the button and say:<br><em class="text-gray-400">"Apple thirty-five, Banana twelve, Pork eighty"</em>';
+}
+
+// ---- Item-by-Item Voice ----
+function startItemVoice() {
+  const btn = document.getElementById('item-voice-btn');
+  btn.classList.add('pulse-record');
+  document.getElementById('item-voice-status').innerHTML = '<span class="text-[#ff3b30] font-bold">🔴 Recording...</span><br>Say the item and price';
+}
+
+function stopItemVoice() {
+  const btn = document.getElementById('item-voice-btn');
+  btn.classList.remove('pulse-record');
+  document.getElementById('item-voice-status').textContent = 'Processing...';
+
+  setTimeout(() => {
+    const mock = { name: 'Apple', cat: 'fruit', amount: 35 };
+    document.getElementById('item-voice-result').innerHTML = `
+      <div class="bg-gray-100 p-3 rounded-xl flex justify-between items-center">
+        <div class="flex items-center gap-3">
+          <span class="text-xl">🍎</span>
+          <div>
+            <div class="font-semibold text-gray-900">${mock.name}</div>
+            <div class="text-xs text-gray-500 capitalize">${mock.cat}</div>
+          </div>
+        </div>
+        <span class="text-lg font-bold text-[#007AFF]">$${mock.amount}</span>
+      </div>
+    `;
+    document.getElementById('item-voice-result').classList.remove('hidden');
+    document.getElementById('item-voice-actions').classList.remove('hidden');
+    document.getElementById('item-voice-status').innerHTML = 'Is this correct?<br><em class="text-gray-400">Apple $35</em>';
+    window.tempItemVoice = mock;
+  }, 800);
+}
+
+function confirmItemVoice() {
+  if (window.tempItemVoice) {
+    itemVoiceItems.push(window.tempItemVoice);
+    document.getElementById('current-item-num').textContent = itemVoiceItems.length + 1;
+  }
+  document.getElementById('item-voice-result').classList.add('hidden');
+  document.getElementById('item-voice-actions').classList.add('hidden');
+  document.getElementById('item-voice-status').innerHTML = 'Next item?<br><em class="text-gray-400">Say: "Banana twelve dollars"</em>';
+}
+
+function retryItemVoice() {
+  document.getElementById('item-voice-result').classList.add('hidden');
+  document.getElementById('item-voice-actions').classList.add('hidden');
+  document.getElementById('item-voice-status').innerHTML = 'Try again<br><em class="text-gray-400">Say the item and price clearly</em>';
+}
+
+function finishItemVoice() {
+  itemVoiceItems.forEach(item => {
+    const tx = {
+      id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+      date: new Date().toISOString(),
+      type: 'cash_out',
+      category: item.cat,
+      item: item.name,
+      amount: item.amount,
+      payment: 'cash',
+      store: 'Voice Entry',
+      notes: '',
+      isCombo: false
+    };
+    saveTransaction(tx);
+    updateTemplateUsage(item.name, item.cat, item.amount);
+  });
+  const total = itemVoiceItems.reduce((s, i) => s + i.amount, 0);
+  showToast(`✅ ${itemVoiceItems.length} items saved! Total: $${total.toFixed(1)}`);
+  itemVoiceItems = [];
+  document.getElementById('current-item-num').textContent = '1';
+  document.getElementById('item-voice-result').classList.add('hidden');
+  document.getElementById('item-voice-actions').classList.add('hidden');
+  document.getElementById('item-voice-status').innerHTML = 'What did you buy?<br><em class="text-gray-400">Say: "Apple thirty-five dollars"</em>';
+}
+
+// ---- Market Mode ----
+function toggleMarketRecord() {
+  const btn = document.getElementById('market-record-btn');
+  if (!marketRecording) {
+    marketRecording = true;
+    btn.innerHTML = '⏸️';
+    btn.classList.add('pulse-record');
+    document.getElementById('market-status').innerHTML = '<span class="text-[#ff3b30] font-bold">🔴 Recording...</span>';
+    marketTimerInterval = setInterval(() => {
+      marketSeconds++;
+      const m = Math.floor(marketSeconds / 60).toString().padStart(2, '0');
+      const s = (marketSeconds % 60).toString().padStart(2, '0');
+      document.getElementById('market-timer').textContent = `${m}:${s}`;
+    }, 1000);
+  } else {
+    marketRecording = false;
+    btn.innerHTML = '🔴';
+    btn.classList.remove('pulse-record');
+    clearInterval(marketTimerInterval);
+    document.getElementById('market-status').textContent = 'Segment saved. Move to next stall.';
+
+    // Simulate segment
+    const mockItems = ['Apple $35', 'Pork $80', 'Rice $45', 'Vegetables $25'];
+    const segment = mockItems[marketSegments.length % mockItems.length];
+    marketSegments.push(segment);
+    renderMarketSegments();
+  }
+}
+
+function renderMarketSegments() {
+  const container = document.getElementById('market-segments');
+  container.innerHTML = marketSegments.map((seg, i) => `
+    <div class="bg-gray-100 p-3 rounded-xl flex justify-between items-center text-sm">
+      <span><span class="font-bold text-[#007AFF]">#${i+1}</span> ${seg}</span>
+      <button onclick="removeMarketSegment(${i})" class="text-red-400 text-xs">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeMarketSegment(idx) {
+  marketSegments.splice(idx, 1);
+  renderMarketSegments();
+}
+
+function finishMarket() {
+  if (marketSegments.length === 0) { showToast('❌ No segments recorded'); return; }
+  clearInterval(marketTimerInterval);
+  marketRecording = false;
+  marketSeconds = 0;
+  document.getElementById('market-timer').textContent = '00:00';
+  document.getElementById('market-record-btn').innerHTML = '🔴';
+
+  // Parse all segments
+  const items = marketSegments.map(seg => {
+    const parts = seg.split(' $');
+    return { name: parts[0], cat: 'other', amount: parseFloat(parts[1]) || 0 };
+  }).filter(i => i.amount > 0);
+
+  items.forEach(item => {
+    const tx = {
+      id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+      date: new Date().toISOString(),
+      type: 'cash_out',
+      category: item.cat,
+      item: item.name,
+      amount: item.amount,
+      payment: 'cash',
+      store: 'Market',
+      notes: '',
+      isCombo: false
+    };
+    saveTransaction(tx);
+  });
+
+  const total = items.reduce((s, i) => s + i.amount, 0);
+  showToast(`✅ ${items.length} items from market saved! Total: $${total.toFixed(1)}`);
+  marketSegments = [];
+  renderMarketSegments();
+  document.getElementById('market-status').textContent = 'Press record at each stall';
+}
+
+// ===================== COMBO VOICE =====================
+function simulateComboVoice() {
+  const result = document.getElementById('combo-result');
+  result.classList.remove('hidden');
+  result.innerHTML = `
+    <div class="bg-white rounded-xl p-4 border border-amber-200">
+      <div class="text-base font-bold text-gray-900 mb-3">🍲 Soup Combo — $55</div>
+      <div class="text-xs text-gray-500 mb-3">AI estimated breakdown:</div>
+      <div class="flex flex-col gap-2 mb-3">
+        <div class="flex justify-between p-2.5 bg-gray-50 rounded-lg text-sm">
+          <span>1. Soup Base <span class="text-gray-400 text-xs">[grocery]</span></span>
+          <span class="font-semibold">$15</span>
+        </div>
+        <div class="flex justify-between p-2.5 bg-gray-50 rounded-lg text-sm">
+          <span>2. Pork <span class="text-gray-400 text-xs">[meat]</span></span>
+          <span class="font-semibold">$20</span>
+        </div>
+        <div class="flex justify-between p-2.5 bg-gray-50 rounded-lg text-sm">
+          <span>3. Mixed Veg <span class="text-gray-400 text-xs">[vegetable]</span></span>
+          <span class="font-semibold">$12</span>
+        </div>
+        <div class="flex justify-between p-2.5 bg-gray-50 rounded-lg text-sm">
+          <span>4. Corn <span class="text-gray-400 text-xs">[vegetable]</span></span>
+          <span class="font-semibold">$8</span>
+        </div>
+      </div>
+      <div class="border-t-2 border-gray-200 pt-3 flex justify-between font-bold text-base mb-4">
+        <span>Total</span><span class="text-[#007AFF]">$55 ✅</span>
+      </div>
+      <div class="flex gap-2">
+        <button onclick="saveCombo('one')" class="flex-1 bg-[#34C759] text-white rounded-xl py-3 text-xs font-semibold active:scale-[0.98] transition">💾 Save as One</button>
+        <button onclick="saveCombo('split')" class="flex-1 bg-[#007AFF] text-white rounded-xl py-3 text-xs font-semibold active:scale-[0.98] transition">📋 Split Items</button>
+      </div>
+    </div>
+  `;
+}
+
+function saveCombo(mode) {
+  if (mode === 'one') {
+    const tx = {
+      id: 'tx_' + Date.now(),
+      date: new Date().toISOString(),
+      type: 'cash_out',
+      category: 'combo',
+      item: 'Soup Combo',
+      amount: 55,
+      payment: 'cash',
+      store: 'Wet Market',
+      notes: '',
+      isCombo: true,
+      comboItems: [
+        { name: 'Soup Base', amount: 15, category: 'grocery' },
+        { name: 'Pork', amount: 20, category: 'meat' },
+        { name: 'Mixed Vegetables', amount: 12, category: 'vegetable' },
+        { name: 'Corn', amount: 8, category: 'vegetable' }
+      ]
+    };
+    saveTransaction(tx);
+    showToast('✅ Saved as one transaction: Soup Combo $55');
+  } else {
+    const items = [
+      { name: 'Soup Base', cat: 'grocery', amount: 15 },
+      { name: 'Pork', cat: 'meat', amount: 20 },
+      { name: 'Mixed Vegetables', cat: 'vegetable', amount: 12 },
+      { name: 'Corn', cat: 'vegetable', amount: 8 }
+    ];
+    items.forEach(item => {
+      const tx = {
+        id: 'tx_' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+        date: new Date().toISOString(),
+        type: 'cash_out',
+        category: item.cat,
+        item: item.name,
+        amount: item.amount,
+        payment: 'cash',
+        store: 'Wet Market',
+        notes: 'From Soup Combo',
+        isCombo: false
+      };
+      saveTransaction(tx);
+    });
+    showToast('✅ Saved as 4 separate items! Total: $55');
+  }
+  document.getElementById('combo-result').classList.add('hidden');
+}
+
+// ===================== DATA STORAGE =====================
+function saveTransaction(tx) {
+  const txs = JSON.parse(localStorage.getItem('fflh_transactions') || '[]');
+  txs.unshift(tx);
+  localStorage.setItem('fflh_transactions', JSON.stringify(txs));
+
+  // Update cash balance
+  const cashBal = parseFloat(localStorage.getItem('fflh_cashBalance') || '0');
+  localStorage.setItem('fflh_cashBalance', (cashBal - tx.amount).toFixed(2));
+}
+
+function updateTemplateUsage(item, cat, amount) {
+  const history = JSON.parse(localStorage.getItem('fflh_shoppingItemHistory') || '[]');
+  const existing = history.find(h => h.item === item);
+  if (existing) {
+    existing.lastAmount = amount;
+    existing.useCount++;
+    existing.lastUsed = new Date().toISOString();
+  } else {
+    history.push({ item, category: cat, lastAmount: amount, useCount: 1, lastUsed: new Date().toISOString() });
+  }
+  localStorage.setItem('fflh_shoppingItemHistory', JSON.stringify(history));
+}
+
+// ===================== TOAST =====================
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+  toast.style.opacity = '1';
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.classList.add('hidden'), 300);
+  }, 2500);
+}
+</script>
+</body>
+</html>

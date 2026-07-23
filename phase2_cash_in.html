@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<title>Cash In — Family Food Log Hub</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; overscroll-behavior-y: none; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="sticky top-0 z-50 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-white px-5 py-4">
+  <div class="flex items-center gap-3">
+    <button onclick="history.back()" class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg hover:bg-white/25 transition">←</button>
+    <div>
+      <div class="text-xs opacity-70">Cash In</div>
+      <div class="text-lg font-bold">Add Money</div>
+    </div>
+  </div>
+</header>
+
+<div class="p-4 pb-24">
+  <!-- Source Selection -->
+  <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Source</div>
+  <div class="grid grid-cols-2 gap-3 mb-6">
+    <button onclick="selectSource('employer')" id="src-employer" class="source-btn bg-white border-2 border-[#007AFF] rounded-2xl p-5 text-center transition-all active:scale-[0.97]">
+      <div class="text-3xl mb-2">👨‍💼</div>
+      <div class="font-bold text-gray-900">Employer</div>
+      <div class="text-xs text-gray-500 mt-1">Madam/Sir gave</div>
+    </button>
+    <button onclick="selectSource('other')" id="src-other" class="source-btn bg-white border-2 border-gray-200 rounded-2xl p-5 text-center transition-all active:scale-[0.97]">
+      <div class="text-3xl mb-2">💰</div>
+      <div class="font-bold text-gray-900">Other</div>
+      <div class="text-xs text-gray-500 mt-1">Other income</div>
+    </button>
+  </div>
+
+  <!-- Amount -->
+  <div class="bg-white rounded-2xl p-5 mb-4 shadow-sm">
+    <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Amount (HKD)</div>
+    <div class="flex items-baseline gap-1">
+      <span class="text-3xl text-[#34C759] font-bold">$</span>
+      <input type="number" id="cashin-amount" placeholder="0.00" step="0.1"
+        class="text-4xl font-bold text-gray-900 bg-transparent border-none outline-none w-full">
+    </div>
+  </div>
+
+  <!-- Quick Amounts -->
+  <div class="flex gap-2 mb-6 overflow-x-auto hide-scrollbar pb-1">
+    <button onclick="setAmount(100)" class="bg-white border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$100</button>
+    <button onclick="setAmount(200)" class="bg-white border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$200</button>
+    <button onclick="setAmount(500)" class="bg-white border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$500</button>
+    <button onclick="setAmount(1000)" class="bg-white border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$1,000</button>
+  </div>
+
+  <!-- Notes -->
+  <div class="bg-white rounded-2xl p-4 mb-6 shadow-sm">
+    <div class="text-xs text-gray-400 mb-2">Notes (optional)</div>
+    <input type="text" id="cashin-notes" placeholder="e.g. Weekly allowance..."
+      class="w-full text-base text-gray-900 bg-transparent border-none outline-none">
+  </div>
+
+  <!-- Save -->
+  <button onclick="saveCashIn()" class="w-full bg-[#34C759] text-white rounded-2xl py-4 text-lg font-bold shadow-lg shadow-green-500/30 active:scale-[0.98] transition">
+    💰 Add Cash
+  </button>
+
+  <!-- Current Balance -->
+  <div class="mt-6 bg-white rounded-2xl p-4 shadow-sm text-center">
+    <div class="text-xs text-gray-400 mb-1">Current Cash Balance</div>
+    <div class="text-3xl font-bold text-[#34C759]" id="current-balance">$0.00</div>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3.5 rounded-xl text-sm font-semibold z-[100] shadow-2xl hidden transition-opacity duration-300"></div>
+
+<script>
+let selectedSource = 'employer';
+
+function selectSource(src) {
+  selectedSource = src;
+  document.querySelectorAll('.source-btn').forEach(btn => {
+    btn.classList.remove('border-[#007AFF]');
+    btn.classList.add('border-gray-200');
+  });
+  document.getElementById('src-' + src).classList.remove('border-gray-200');
+  document.getElementById('src-' + src).classList.add('border-[#007AFF]');
+}
+
+function setAmount(amt) {
+  document.getElementById('cashin-amount').value = amt;
+}
+
+function saveCashIn() {
+  const amount = parseFloat(document.getElementById('cashin-amount').value);
+  if (!amount || amount <= 0) { showToast('❌ Please enter amount'); return; }
+
+  const tx = {
+    id: 'tx_' + Date.now(),
+    date: new Date().toISOString(),
+    type: 'cash_in',
+    category: 'income',
+    item: selectedSource === 'employer' ? 'From Employer' : 'Other Income',
+    amount: amount,
+    payment: 'cash',
+    store: selectedSource === 'employer' ? 'Employer' : 'Other',
+    notes: document.getElementById('cashin-notes').value,
+    isCombo: false
+  };
+
+  const txs = JSON.parse(localStorage.getItem('fflh_transactions') || '[]');
+  txs.unshift(tx);
+  localStorage.setItem('fflh_transactions', JSON.stringify(txs));
+
+  const cashBal = parseFloat(localStorage.getItem('fflh_cashBalance') || '0');
+  const newBal = cashBal + amount;
+  localStorage.setItem('fflh_cashBalance', newBal.toFixed(2));
+
+  document.getElementById('current-balance').textContent = '$' + newBal.toFixed(2);
+  showToast('✅ Cash added: $' + amount.toFixed(1));
+  document.getElementById('cashin-amount').value = '';
+  document.getElementById('cashin-notes').value = '';
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.classList.add('hidden'), 300); }, 2500);
+}
+
+// Load current balance
+document.addEventListener('DOMContentLoaded', () => {
+  const bal = parseFloat(localStorage.getItem('fflh_cashBalance') || '0');
+  document.getElementById('current-balance').textContent = '$' + bal.toFixed(2);
+});
+</script>
+</body>
+</html>

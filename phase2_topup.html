@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a1a2e">
+<title>Top Up — Family Food Log Hub</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f7; overscroll-behavior-y: none; }
+  .loc-btn.active { background: #007AFF !important; color: white !important; border-color: #007AFF !important; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<header class="sticky top-0 z-50 bg-gradient-to-r from-[#1a1a2e] to-[#16213e] text-white px-5 py-4">
+  <div class="flex items-center gap-3">
+    <button onclick="history.back()" class="w-9 h-9 rounded-xl bg-white/15 flex items-center justify-center text-lg hover:bg-white/25 transition">←</button>
+    <div>
+      <div class="text-xs opacity-70">Octopus</div>
+      <div class="text-lg font-bold">Top Up</div>
+    </div>
+  </div>
+</header>
+
+<div class="p-4 pb-24">
+  <!-- Location -->
+  <div class="text-xs text-gray-400 uppercase tracking-wider mb-3">Top-up Location</div>
+  <div class="grid grid-cols-3 gap-3 mb-5">
+    <button onclick="selectLoc('7-11')" id="loc-7-11" class="loc-btn bg-white border-2 border-gray-200 rounded-2xl p-4 text-center transition-all active:scale-[0.97]">
+      <div class="text-2xl mb-1">🏪</div>
+      <div class="text-xs font-semibold">7-Eleven</div>
+    </button>
+    <button onclick="selectLoc('mtr')" id="loc-mtr" class="loc-btn bg-white border-2 border-gray-200 rounded-2xl p-4 text-center transition-all active:scale-[0.97]">
+      <div class="text-2xl mb-1">🚇</div>
+      <div class="text-xs font-semibold">MTR Station</div>
+    </button>
+    <button onclick="selectLoc('other')" id="loc-other" class="loc-btn bg-white border-2 border-gray-200 rounded-2xl p-4 text-center transition-all active:scale-[0.97]">
+      <div class="text-2xl mb-1">📍</div>
+      <div class="text-xs font-semibold">Other</div>
+    </button>
+  </div>
+
+  <!-- Amount -->
+  <div class="bg-white rounded-2xl p-5 mb-4 shadow-sm">
+    <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Top-up Amount (HKD)</div>
+    <div class="flex items-baseline gap-1">
+      <span class="text-3xl text-[#007AFF] font-bold">$</span>
+      <input type="number" id="topup-amount" placeholder="0.00" step="0.1"
+        class="text-4xl font-bold text-gray-900 bg-transparent border-none outline-none w-full">
+    </div>
+  </div>
+
+  <!-- Quick Amounts -->
+  <div class="flex gap-2 mb-6 overflow-x-auto pb-1">
+    <button onclick="setTopup(50)" class="bg-white border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$50</button>
+    <button onclick="setTopup(100)" class="bg-white border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$100</button>
+    <button onclick="setTopup(200)" class="bg-white border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$200</button>
+    <button onclick="setTopup(500)" class="bg-white border border-gray-200 rounded-full px-5 py-2.5 text-sm font-semibold text-gray-700 active:scale-95 transition whitespace-nowrap">$500</button>
+  </div>
+
+  <!-- Notes -->
+  <div class="bg-white rounded-2xl p-4 mb-6 shadow-sm">
+    <div class="text-xs text-gray-400 mb-2">Notes (optional)</div>
+    <input type="text" id="topup-notes" placeholder="e.g. At Yuen Long MTR..."
+      class="w-full text-base text-gray-900 bg-transparent border-none outline-none">
+  </div>
+
+  <!-- Save -->
+  <button onclick="saveTopup()" class="w-full bg-[#007AFF] text-white rounded-2xl py-4 text-lg font-bold shadow-lg shadow-blue-500/30 active:scale-[0.98] transition">
+    ➕ Add Value
+  </button>
+
+  <!-- Balances -->
+  <div class="mt-6 grid grid-cols-2 gap-3">
+    <div class="bg-white rounded-2xl p-4 shadow-sm text-center">
+      <div class="text-xs text-gray-400 mb-1">Octopus Before</div>
+      <div class="text-xl font-bold text-gray-500" id="oct-before">$0.00</div>
+    </div>
+    <div class="bg-white rounded-2xl p-4 shadow-sm text-center">
+      <div class="text-xs text-gray-400 mb-1">Octopus After</div>
+      <div class="text-xl font-bold text-[#34C759]" id="oct-after">$0.00</div>
+    </div>
+  </div>
+</div>
+
+<div id="toast" class="fixed bottom-24 left-1/2 -translate-x-1/2 bg-gray-900 text-white px-6 py-3.5 rounded-xl text-sm font-semibold z-[100] shadow-2xl hidden transition-opacity duration-300"></div>
+
+<script>
+let selectedLoc = null;
+
+function selectLoc(loc) {
+  selectedLoc = loc;
+  document.querySelectorAll('.loc-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('loc-' + loc).classList.add('active');
+}
+
+function setTopup(amt) {
+  document.getElementById('topup-amount').value = amt;
+  updatePreview();
+}
+
+document.getElementById('topup-amount').addEventListener('input', updatePreview);
+
+function updatePreview() {
+  const before = parseFloat(localStorage.getItem('fflh_octopusBalance') || '0');
+  const add = parseFloat(document.getElementById('topup-amount').value) || 0;
+  document.getElementById('oct-before').textContent = '$' + before.toFixed(2);
+  document.getElementById('oct-after').textContent = '$' + (before + add).toFixed(2);
+}
+
+function saveTopup() {
+  const amount = parseFloat(document.getElementById('topup-amount').value);
+  if (!amount || amount <= 0) { showToast('❌ Please enter amount'); return; }
+  if (!selectedLoc) { showToast('❌ Please select location'); return; }
+
+  const locNames = { '7-11': '7-Eleven', 'mtr': 'MTR Station', 'other': 'Other' };
+
+  const tx = {
+    id: 'tx_' + Date.now(),
+    date: new Date().toISOString(),
+    type: 'topup',
+    category: 'topup',
+    item: 'Octopus Top-up',
+    amount: amount,
+    payment: 'cash',
+    store: locNames[selectedLoc],
+    notes: document.getElementById('topup-notes').value,
+    isCombo: false
+  };
+
+  const txs = JSON.parse(localStorage.getItem('fflh_transactions') || '[]');
+  txs.unshift(tx);
+  localStorage.setItem('fflh_transactions', JSON.stringify(txs));
+
+  const octBal = parseFloat(localStorage.getItem('fflh_octopusBalance') || '0');
+  localStorage.setItem('fflh_octopusBalance', (octBal + amount).toFixed(2));
+
+  showToast(`✅ Top-up $${amount.toFixed(0)} at ${locNames[selectedLoc]}`);
+  document.getElementById('topup-amount').value = '';
+  document.getElementById('topup-notes').value = '';
+  updatePreview();
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.remove('hidden');
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.classList.add('hidden'), 300); }, 2500);
+}
+
+document.addEventListener('DOMContentLoaded', updatePreview);
+</script>
+</body>
+</html>
