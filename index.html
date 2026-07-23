@@ -24,14 +24,14 @@
     }
   </script>
   <style>
-    * { -webkit-tap-highlight-color: transparent; }
+    * { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overscroll-behavior-y: none; }
     .page { display: none; min-height: 100vh; padding-bottom: 80px; }
     .page.active { display: block; }
     .btn-press:active { transform: scale(0.96); }
     .slide-up { animation: slideUp 0.3s ease-out; }
     @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-    .fade-in { animation: fadeIn 0.3s ease-out; }
+    .fade-in { animation: fadeIn 0.2s ease-out; }
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; z-index: 50; }
     .nav-item.active { color: #f97316; }
@@ -45,7 +45,22 @@
     .amount-input { font-size: 32px; text-align: center; letter-spacing: 2px; }
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .cat-btn2 { border: 2px solid #e5e7eb; transition: all 0.2s; }
+    .cat-btn2.active { border-color: #f97316; background: #fff7ed; }
+    .chip-btn2 { background: #f3f4f6; border: 1px solid #e5e7eb; transition: all 0.2s; }
+    .chip-btn2.active { background: #f97316; color: white; border-color: #f97316; }
+    .pulse-record { animation: pulse-red 1.5s infinite; }
+    @keyframes pulse-red { 0% { box-shadow: 0 0 0 0 rgba(239,68,68,0.7); } 70% { box-shadow: 0 0 0 20px rgba(239,68,68,0); } 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0); } }
+    .voice-wave { display: flex; align-items: center; gap: 3px; height: 30px; }
+    .voice-wave span { width: 4px; background: #ef4444; border-radius: 2px; animation: wave 1s ease-in-out infinite; }
+    .voice-wave span:nth-child(1) { animation-delay: 0s; height: 10px; }
+    .voice-wave span:nth-child(2) { animation-delay: 0.1s; height: 20px; }
+    .voice-wave span:nth-child(3) { animation-delay: 0.2s; height: 15px; }
+    .voice-wave span:nth-child(4) { animation-delay: 0.3s; height: 25px; }
+    .voice-wave span:nth-child(5) { animation-delay: 0.4s; height: 12px; }
+    @keyframes wave { 0%,100% { transform: scaleY(0.5); } 50% { transform: scaleY(1); } }
   </style>
+<base target="_blank">
 </head>
 <body class="bg-gray-50 text-gray-800">
 
@@ -168,11 +183,11 @@
             <span class="text-2xl">📷</span>
             <span class="text-xs font-medium text-gray-700 text-center leading-tight">Scan<br>Receipt</span>
           </button>
-          <button onclick="openVoice()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+          <button onclick="openVoiceModal()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
             <span class="text-2xl">🎤</span>
             <span class="text-xs font-medium text-gray-700 text-center leading-tight">Voice<br>Entry</span>
           </button>
-          <button onclick="openCamera()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+          <button onclick="openCameraModal()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
             <span class="text-2xl">📷</span>
             <span class="text-xs font-medium text-gray-700 text-center leading-tight">Camera<br>ID</span>
           </button>
@@ -413,44 +428,6 @@
       </div>
     </div>
 
-    <!-- MEAL PLANNER PAGE -->
-    <div id="mealPlannerPage" class="page p-4">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-bold">🗓️ Meal Planner</h2>
-        <div class="flex gap-2">
-          <button class="text-xs bg-primary text-white px-3 py-1.5 rounded-full">This Week</button>
-          <button class="text-xs bg-gray-100 px-3 py-1.5 rounded-full">Next Week</button>
-        </div>
-      </div>
-      <div id="mealPlanCalendar" class="space-y-3">
-        <div class="bg-white rounded-2xl p-4 card-shadow">
-          <div class="font-semibold text-sm mb-2">Mon 22/7</div>
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-sm"><span class="text-gray-500">🌅 Breakfast</span><button class="text-primary text-xs">＋</button></div>
-            <div class="flex items-center justify-between text-sm"><span class="text-gray-500">🌞 Lunch</span><button class="text-primary text-xs">＋</button></div>
-            <div class="flex items-center justify-between text-sm bg-orange-50 p-2 rounded-lg">
-              <span>🌙 Dinner: 🍳 糖醋排骨</span>
-              <div class="flex gap-1"><button class="text-xs">👁️</button><button class="text-xs">🗑️</button></div>
-            </div>
-          </div>
-        </div>
-        <div class="bg-white rounded-2xl p-4 card-shadow">
-          <div class="font-semibold text-sm mb-2">Tue 23/7</div>
-          <div class="space-y-2">
-            <div class="flex items-center justify-between text-sm"><span class="text-gray-500">🌅 Breakfast</span><button class="text-primary text-xs">＋</button></div>
-            <div class="flex items-center justify-between text-sm"><span class="text-gray-500">🌞 Lunch</span><button class="text-primary text-xs">＋</button></div>
-            <div class="flex items-center justify-between text-sm bg-orange-50 p-2 rounded-lg">
-              <span>🌙 Dinner: 🍜 番茄炒蛋</span>
-              <div class="flex gap-1"><button class="text-xs">👁️</button><button class="text-xs">🗑️</button></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <button onclick="generateShoppingFromPlan()" class="w-full mt-4 bg-primary text-white py-4 rounded-xl font-semibold btn-press shadow-lg shadow-orange-200">
-        🛒 Generate Shopping List for Week
-      </button>
-    </div>
-
     <!-- Bottom Navigation -->
     <nav class="bottom-nav pb-safe">
       <div class="flex justify-around items-center h-16">
@@ -476,91 +453,276 @@
     </nav>
   </div>
 
-  <!-- ========== MODALS ========== -->
+  <!-- ========== PHASE 2 MODALS ========== -->
 
+  <!-- CASH OUT MODAL (Enhanced) -->
   <div id="cashOutModal" class="modal">
-    <div class="modal-content p-6 slide-up">
+    <div class="modal-content p-5 slide-up">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold">💵 Cash Out</h3>
         <button onclick="closeModal('cashOutModal')" class="text-gray-400 text-xl">✕</button>
       </div>
-      <div class="space-y-4">
-        <div>
-          <label class="text-sm text-gray-600 mb-1 block">Category</label>
-          <div class="grid grid-cols-3 gap-2" id="cashOutCategories"></div>
+
+      <!-- Amount -->
+      <div class="bg-gray-50 rounded-xl p-4 mb-4">
+        <div class="text-xs text-gray-400 uppercase tracking-wider mb-1">Amount (HKD)</div>
+        <div class="flex items-baseline gap-1">
+          <span class="text-2xl text-primary font-bold">$</span>
+          <input type="number" id="cashOutAmount" class="text-3xl font-bold text-gray-900 bg-transparent border-none outline-none w-full" placeholder="0.00" step="0.1">
         </div>
-        <div>
-          <label class="text-sm text-gray-600 mb-1 block">Item</label>
-          <input type="text" id="cashOutItem" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none" placeholder="What did you buy?">
-          <div id="itemSuggestions" class="hidden mt-2 max-h-32 overflow-y-auto bg-gray-50 rounded-lg"></div>
+      </div>
+
+      <!-- Category Grid -->
+      <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Category</div>
+      <div class="grid grid-cols-3 gap-2 mb-3" id="cashOutCatGrid"></div>
+
+      <!-- Item Chips -->
+      <div id="cashOutItemSection" class="hidden mb-3">
+        <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Item</div>
+        <div id="cashOutItemChips" class="flex flex-wrap gap-2"></div>
+      </div>
+
+      <!-- Quick Templates -->
+      <div class="mb-3">
+        <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Quick Templates</div>
+        <div class="flex gap-2 overflow-x-auto no-scrollbar pb-1" id="cashOutTemplates"></div>
+      </div>
+
+      <!-- Store -->
+      <div class="bg-gray-50 rounded-xl p-3 mb-4">
+        <div class="text-xs text-gray-400 mb-1">Store / Location</div>
+        <input type="text" id="cashOutStore" class="w-full text-sm text-gray-900 bg-transparent border-none outline-none" placeholder="e.g. Wet Market">
+      </div>
+
+      <button onclick="saveCashOut()" class="w-full bg-primary text-white font-semibold py-3.5 rounded-xl btn-press shadow-lg shadow-orange-200">💾 Save Expense</button>
+    </div>
+  </div>
+
+  <!-- VOICE ENTRY MODAL (New Phase 2) -->
+  <div id="voiceModal" class="modal">
+    <div class="modal-content p-5 slide-up">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">🎤 Voice Entry</h3>
+        <button onclick="closeModal('voiceModal')" class="text-gray-400 text-xl">✕</button>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="flex gap-2 mb-4">
+        <button onclick="setVoiceMode('batch')" id="vmode-batch" class="flex-1 py-2 rounded-lg text-sm font-semibold bg-primary text-white transition">🎙️ Batch</button>
+        <button onclick="setVoiceMode('item')" id="vmode-item" class="flex-1 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 transition">🎤 One by One</button>
+        <button onclick="setVoiceMode('market')" id="vmode-market" class="flex-1 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 transition">🏪 Market</button>
+      </div>
+
+      <!-- Batch Panel -->
+      <div id="voiceBatchPanel">
+        <div class="text-center mb-4">
+          <div id="voiceStatus" class="text-sm text-gray-500 mb-4">Hold button & say:<br><em class="text-gray-400">"Apple thirty-five, Banana twelve, Pork eighty"</em></div>
+          <button id="voiceRecordBtn"
+            onmousedown="startVoiceRecord()" onmouseup="stopVoiceRecord()"
+            ontouchstart="startVoiceRecord()" ontouchend="stopVoiceRecord()"
+            class="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white text-3xl shadow-xl shadow-red-500/40 active:scale-95 transition-all select-none mx-auto block">
+            🎤
+          </button>
+          <div class="text-xs text-gray-400 mt-2">Hold to Record</div>
         </div>
-        <div>
-          <label class="text-sm text-gray-600 mb-1 block">Amount (HKD)</label>
-          <input type="number" id="cashOutAmount" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none amount-input" placeholder="0.00">
+
+        <div id="voiceResults" class="hidden">
+          <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Parsed Items</div>
+          <div id="voiceParsedItems" class="flex flex-col gap-2 mb-3"></div>
+          <div class="flex justify-between items-center border-t-2 border-gray-200 pt-2 mb-3">
+            <span class="font-bold">Total</span>
+            <span class="text-xl font-bold text-primary" id="voiceTotalAmt">$0</span>
+          </div>
+          <button onclick="saveVoiceItems()" class="w-full bg-secondary text-white font-semibold py-3 rounded-xl btn-press">💾 Save All Items</button>
         </div>
-        <button onclick="saveCashOut()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save</button>
+      </div>
+
+      <!-- Item by Item Panel -->
+      <div id="voiceItemPanel" class="hidden">
+        <div class="text-center mb-4">
+          <div class="text-sm text-gray-500 mb-2">Item <span id="itemNum">1</span></div>
+          <div id="itemVoiceStatus" class="text-sm text-gray-400 mb-3">Say: "Apple thirty-five dollars"</div>
+          <button id="itemRecordBtn"
+            onmousedown="startItemRecord()" onmouseup="stopItemRecord()"
+            ontouchstart="startItemRecord()" ontouchend="stopItemRecord()"
+            class="w-16 h-16 rounded-full bg-gradient-to-br from-red-500 to-red-600 text-white text-2xl shadow-xl shadow-red-500/40 active:scale-95 transition-all select-none mx-auto block">
+            🎤
+          </button>
+        </div>
+        <div id="itemVoiceResult" class="hidden mb-3"></div>
+        <div id="itemVoiceActions" class="hidden flex gap-2 mb-3">
+          <button onclick="confirmItemVoice()" class="flex-1 bg-secondary text-white py-2.5 rounded-xl text-sm font-semibold">✅ Confirm</button>
+          <button onclick="retryItemVoice()" class="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl text-sm font-semibold">🔄 Retry</button>
+        </div>
+        <button onclick="finishItemVoice()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">✅ Finish & Save All</button>
+      </div>
+
+      <!-- Market Mode Panel -->
+      <div id="voiceMarketPanel" class="hidden">
+        <div class="flex justify-between items-center mb-3">
+          <span class="text-sm font-bold">Market Mode</span>
+          <span id="marketTimer" class="text-sm text-primary font-mono">00:00</span>
+        </div>
+        <div class="flex justify-center gap-4 mb-3">
+          <button id="marketRecBtn" onclick="toggleMarketRecord()" class="w-16 h-16 rounded-full bg-red-500 text-white text-2xl shadow-xl active:scale-95 transition-all">🔴</button>
+          <button onclick="finishMarket()" class="w-16 h-16 rounded-full bg-secondary text-white text-2xl shadow-lg active:scale-95 transition-all">✅</button>
+        </div>
+        <div id="marketSegments" class="flex flex-col gap-2 max-h-32 overflow-y-auto no-scrollbar"></div>
+      </div>
+
+      <!-- Combo Voice Demo -->
+      <div class="bg-amber-50 rounded-xl p-3 mt-4 border border-amber-200">
+        <div class="text-sm text-amber-700 font-bold mb-1">🔥 Combo Voice</div>
+        <div class="text-xs text-amber-600/80 mb-2">Say: "Soup pork veg corn fifty-five dollars"</div>
+        <button onclick="demoComboVoice()" class="w-full bg-amber-500 text-white rounded-xl py-2 text-sm font-semibold">🍲 Try Combo Demo</button>
+        <div id="comboResult" class="hidden mt-2"></div>
       </div>
     </div>
   </div>
 
+  <!-- CAMERA ID MODAL (New Phase 2) -->
+  <div id="cameraModal" class="modal">
+    <div class="modal-content p-5 slide-up">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">📷 Camera ID</h3>
+        <button onclick="closeModal('cameraModal')" class="text-gray-400 text-xl">✕</button>
+      </div>
+
+      <div class="text-center mb-4">
+        <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mx-auto mb-3 flex items-center justify-center text-3xl">📷</div>
+        <div class="text-sm text-gray-500">Take a photo of the item.<br>AI will identify it.</div>
+      </div>
+
+      <button onclick="triggerCamera()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press mb-4">📷 Take Photo</button>
+      <input type="file" accept="image/*" capture="environment" id="cameraFileInput" class="hidden" onchange="handleCameraFile(event)">
+
+      <div id="cameraResult" class="hidden">
+        <div class="flex items-center gap-3 mb-3 p-3 bg-gray-50 rounded-xl">
+          <div id="camIcon" class="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center text-2xl">❓</div>
+          <div>
+            <div id="camName" class="font-bold text-sm">Identifying...</div>
+            <div id="camCat" class="text-xs text-gray-500">Please wait</div>
+            <div id="camConfidence" class="text-xs text-green-600 font-semibold"></div>
+          </div>
+        </div>
+        <div class="bg-gray-50 rounded-xl p-3 mb-3">
+          <div class="text-xs text-gray-400 mb-1">Amount (HKD)</div>
+          <div class="flex items-baseline gap-1">
+            <span class="text-xl text-primary font-bold">$</span>
+            <input type="number" id="camAmount" class="text-2xl font-bold text-gray-900 bg-transparent border-none outline-none w-full" placeholder="0.00" step="0.1">
+          </div>
+        </div>
+        <div class="flex gap-2">
+          <button onclick="saveCameraResult()" class="flex-1 bg-secondary text-white py-2.5 rounded-xl text-sm font-semibold">✅ Save</button>
+          <button onclick="resetCameraModal()" class="flex-1 bg-red-100 text-red-600 py-2.5 rounded-xl text-sm font-semibold">❌ Retry</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRANSPORT MODAL -->
   <div id="transportModal" class="modal">
-    <div class="modal-content p-6 slide-up">
+    <div class="modal-content p-5 slide-up">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold">🚌 Transport</h3>
         <button onclick="closeModal('transportModal')" class="text-gray-400 text-xl">✕</button>
       </div>
-      <div class="space-y-4">
-        <div>
-          <label class="text-sm text-gray-600 mb-1 block">Select from History</label>
-          <div id="transportHistory" class="space-y-2 max-h-40 overflow-y-auto"></div>
-        </div>
-        <div class="text-center text-gray-400 text-sm">— or enter manually —</div>
-        <div class="grid grid-cols-4 gap-2">
-          <button onclick="setTransportType('mtr')" class="transport-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press" data-type="mtr">MTR</button>
-          <button onclick="setTransportType('bus')" class="transport-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press selected" data-type="bus">Bus</button>
-          <button onclick="setTransportType('minibus')" class="transport-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press" data-type="minibus">Minibus</button>
-          <button onclick="setTransportType('ferry')" class="transport-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press" data-type="ferry">Ferry</button>
-        </div>
-        <input type="text" id="transportRoute" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none" placeholder="Route / From">
-        <input type="text" id="transportTo" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none hidden" placeholder="To (MTR only)">
-        <input type="number" id="transportAmount" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none amount-input" placeholder="0.00">
-        <button onclick="saveTransport()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save & Add to History</button>
+
+      <!-- Smart History -->
+      <div id="transHistorySection" class="mb-4">
+        <div class="text-xs text-gray-400 uppercase tracking-wider mb-2">Select from History</div>
+        <div id="transHistoryList" class="flex flex-col gap-2 max-h-32 overflow-y-auto no-scrollbar mb-3"></div>
       </div>
+
+      <div class="text-center text-gray-300 text-xs mb-3">— or enter manually —</div>
+
+      <div class="grid grid-cols-4 gap-2 mb-3">
+        <button onclick="setTransportType('mtr')" class="trans-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-xs font-semibold btn-press" data-type="mtr">🚇 MTR</button>
+        <button onclick="setTransportType('bus')" class="trans-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-xs font-semibold btn-press" data-type="bus">🚌 Bus</button>
+        <button onclick="setTransportType('minibus')" class="trans-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-xs font-semibold btn-press" data-type="minibus">🚐 Mini</button>
+        <button onclick="setTransportType('ferry')" class="trans-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-xs font-semibold btn-press" data-type="ferry">⛴️ Ferry</button>
+      </div>
+
+      <div id="mtrFields" class="hidden space-y-2 mb-3">
+        <input type="text" id="transFrom" class="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none text-sm" placeholder="From Station">
+        <input type="text" id="transTo" class="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none text-sm" placeholder="To Station">
+      </div>
+      <input type="text" id="transRoute" class="w-full px-3 py-2.5 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none text-sm mb-3 hidden" placeholder="Route Number">
+
+      <div class="bg-gray-50 rounded-xl p-3 mb-3">
+        <div class="text-xs text-gray-400 mb-1">Fare (HKD)</div>
+        <div class="flex items-baseline gap-1">
+          <span class="text-xl text-primary font-bold">$</span>
+          <input type="number" id="transAmount" class="text-2xl font-bold text-gray-900 bg-transparent border-none outline-none w-full" placeholder="0.00" step="0.1">
+        </div>
+      </div>
+
+      <div class="flex gap-2 mb-3 overflow-x-auto no-scrollbar" id="transQuickFares"></div>
+
+      <button onclick="saveTransport()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save Trip</button>
     </div>
   </div>
 
+  <!-- TOP UP MODAL -->
   <div id="topUpModal" class="modal">
-    <div class="modal-content p-6 slide-up">
+    <div class="modal-content p-5 slide-up">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold">➕ Octopus Top-up</h3>
         <button onclick="closeModal('topUpModal')" class="text-gray-400 text-xl">✕</button>
       </div>
-      <div class="space-y-4">
-        <div class="grid grid-cols-3 gap-2">
-          <button onclick="setTopUpLocation('7-11')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press selected">7-11</button>
-          <button onclick="setTopUpLocation('mtr')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press">MTR Station</button>
-          <button onclick="setTopUpLocation('other')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press">Other</button>
-        </div>
-        <input type="number" id="topUpAmount" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none amount-input" placeholder="0.00">
-        <button onclick="saveTopUp()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save</button>
+      <div class="grid grid-cols-3 gap-2 mb-3">
+        <button onclick="setTopUpLocation('7-11')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-xs font-semibold btn-press">🏪 7-11</button>
+        <button onclick="setTopUpLocation('mtr')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-xs font-semibold btn-press">🚇 MTR</button>
+        <button onclick="setTopUpLocation('other')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-xs font-semibold btn-press">📍 Other</button>
       </div>
+      <div class="bg-gray-50 rounded-xl p-3 mb-3">
+        <div class="text-xs text-gray-400 mb-1">Amount (HKD)</div>
+        <div class="flex items-baseline gap-1">
+          <span class="text-xl text-primary font-bold">$</span>
+          <input type="number" id="topUpAmount" class="text-2xl font-bold text-gray-900 bg-transparent border-none outline-none w-full" placeholder="0.00">
+        </div>
+      </div>
+      <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
+        <button onclick="document.getElementById('topUpAmount').value=50" class="bg-gray-100 rounded-full px-4 py-2 text-sm font-semibold">$50</button>
+        <button onclick="document.getElementById('topUpAmount').value=100" class="bg-gray-100 rounded-full px-4 py-2 text-sm font-semibold">$100</button>
+        <button onclick="document.getElementById('topUpAmount').value=200" class="bg-gray-100 rounded-full px-4 py-2 text-sm font-semibold">$200</button>
+        <button onclick="document.getElementById('topUpAmount').value=500" class="bg-gray-100 rounded-full px-4 py-2 text-sm font-semibold">$500</button>
+      </div>
+      <button onclick="saveTopUp()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save</button>
     </div>
   </div>
 
+  <!-- CASH IN MODAL -->
   <div id="cashInModal" class="modal">
-    <div class="modal-content p-6 slide-up">
+    <div class="modal-content p-5 slide-up">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-bold">💰 Cash In</h3>
         <button onclick="closeModal('cashInModal')" class="text-gray-400 text-xl">✕</button>
       </div>
-      <div class="space-y-4">
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="setCashInSource('employer')" class="cashin-src p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press selected">From Employer</button>
-          <button onclick="setCashInSource('other')" class="cashin-src p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press">Other</button>
-        </div>
-        <input type="number" id="cashInAmount" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none amount-input" placeholder="0.00">
-        <button onclick="saveCashIn()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save</button>
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <button onclick="setCashInSource('employer')" class="cashin-src p-3 rounded-lg border-2 border-gray-200 text-center btn-press">
+          <div class="text-2xl mb-1">👨‍💼</div>
+          <div class="text-xs font-semibold">From Employer</div>
+        </button>
+        <button onclick="setCashInSource('other')" class="cashin-src p-3 rounded-lg border-2 border-gray-200 text-center btn-press">
+          <div class="text-2xl mb-1">💰</div>
+          <div class="text-xs font-semibold">Other</div>
+        </button>
       </div>
+      <div class="bg-gray-50 rounded-xl p-3 mb-3">
+        <div class="text-xs text-gray-400 mb-1">Amount (HKD)</div>
+        <div class="flex items-baseline gap-1">
+          <span class="text-xl text-green-600 font-bold">$</span>
+          <input type="number" id="cashInAmount" class="text-2xl font-bold text-gray-900 bg-transparent border-none outline-none w-full" placeholder="0.00">
+        </div>
+      </div>
+      <div class="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
+        <button onclick="document.getElementById('cashInAmount').value=100" class="bg-gray-100 rounded-full px-4 py-2 text-sm font-semibold">$100</button>
+        <button onclick="document.getElementById('cashInAmount').value=200" class="bg-gray-100 rounded-full px-4 py-2 text-sm font-semibold">$200</button>
+        <button onclick="document.getElementById('cashInAmount').value=500" class="bg-gray-100 rounded-full px-4 py-2 text-sm font-semibold">$500</button>
+        <button onclick="document.getElementById('cashInAmount').value=1000" class="bg-gray-100 rounded-full px-4 py-2 text-sm font-semibold">$1,000</button>
+      </div>
+      <button onclick="saveCashIn()" class="w-full bg-secondary text-white font-semibold py-3 rounded-xl btn-press">💰 Add Cash</button>
     </div>
   </div>
 
@@ -602,14 +764,23 @@
         { item: 'Rice', category: 'grocery', lastAmount: 45.0, useCount: 6, lastUsed: '2026-07-21T09:00:00' }
       ],
       categories: {
-        fruit: { icon: '🍎', items: ['Apple','Pears','Banana','Orange','Grapes'] },
-        vegetable: { icon: '🥬', items: ['Bell Pepper','Carrots','Mushroom','Corn','Cucumber','Eggplant'] },
-        meat: { icon: '🥩', items: ['Pork','Beef','Chicken','Minced Pork'] },
-        fish: { icon: '🐟', items: ['Salmon','Threadfin','Grass Carp'] },
-        grocery: { icon: '🍚', items: ['Rice','Oil','Salt','Sugar','Soy Sauce'] },
+        fruit: { icon: '🍎', items: ['Apple','Pears','Banana','Orange','Grapes','Mango'] },
+        vegetable: { icon: '🥬', items: ['Bell Pepper','Carrots','Mushroom','Corn','Cucumber','Eggplant','Ginger','Scallion'] },
+        meat: { icon: '🥩', items: ['Pork','Beef','Chicken','Minced Pork','Pork Ribs'] },
+        fish: { icon: '🐟', items: ['Salmon','Threadfin','Grass Carp','Fish Fillet'] },
+        grocery: { icon: '🍚', items: ['Rice','Oil','Salt','Sugar','Light Soy Sauce','Dark Soy Sauce','Vinegar'] },
         other: { icon: '📦', items: ['Household','Baby','Personal Care'] }
       },
-      templates: [],
+      templates: [
+        { item: 'Apple', category: 'fruit', amount: 35 },
+        { item: 'Banana', category: 'fruit', amount: 12 },
+        { item: 'Pork Mince', category: 'meat', amount: 20 },
+        { item: 'Chicken', category: 'meat', amount: 45 },
+        { item: 'Rice', category: 'grocery', amount: 45 },
+        { item: 'Light Soy Sauce', category: 'grocery', amount: 18 },
+        { item: 'Corn', category: 'vegetable', amount: 10 },
+        { item: 'Salmon', category: 'fish', amount: 60 }
+      ],
       settings: { language: 'en', currency: 'HKD', lowBalanceAlert: 50, voiceRetentionDays: 3 }
     };
 
@@ -619,6 +790,15 @@
     let currentTopUpLocation = '7-11';
     let currentCashInSource = 'employer';
     let selectedCashOutCategory = null;
+    let selectedCashOutItem = null;
+    let voiceMode = 'batch';
+    let voiceItems = [];
+    let itemVoiceItems = [];
+    let marketSegments = [];
+    let marketRecording = false;
+    let marketTimerInterval = null;
+    let marketSeconds = 0;
+    let tempVoiceItem = null;
 
     // ========== INIT ==========
     document.addEventListener('DOMContentLoaded', () => {
@@ -731,8 +911,6 @@
       updateBalances();
       renderRecentTransactions();
       renderQuickTemplates();
-      renderTransportHistory();
-      renderHistory();
       showPage('home');
     }
 
@@ -808,14 +986,7 @@
     // ========== QUICK TEMPLATES ==========
     function renderQuickTemplates() {
       const container = document.getElementById('quickTemplates');
-      const templates = [
-        { category: 'fruit', item: 'Apple', amount: 35 },
-        { category: 'meat', item: 'Pork Mince', amount: 20 },
-        { category: 'grocery', item: 'Rice', amount: 45 },
-        { category: 'transport', item: '268M Bus', amount: 10.1 },
-        { category: 'transport', item: 'MTR YL-TST', amount: 25 }
-      ];
-      container.innerHTML = templates.map(t => `
+      container.innerHTML = DB.templates.slice(0, 6).map(t => `
         <button onclick="useTemplate('${t.category}', '${t.item}', ${t.amount})" class="flex-shrink-0 bg-white rounded-xl px-4 py-2 card-shadow btn-press text-sm">
           <div class="text-center">${getCategoryIcon(t.category)}</div>
           <div class="font-medium text-xs mt-1">${t.item}</div>
@@ -827,7 +998,8 @@
     function useTemplate(category, item, amount) {
       openCashOut();
       setTimeout(() => {
-        document.getElementById('cashOutItem').value = item;
+        selectCashOutCategory(category);
+        setTimeout(() => selectCashOutItem(item), 50);
         document.getElementById('cashOutAmount').value = amount;
       }, 100);
     }
@@ -836,62 +1008,80 @@
     function openModal(id) { document.getElementById(id).classList.add('active'); }
     function closeModal(id) { document.getElementById(id).classList.remove('active'); }
 
-    // ========== CASH OUT ==========
+    // ========== CASH OUT (ENHANCED PHASE 2) ==========
     function openCashOut() {
       if (!currentUser.permissions.includes('expense') && currentUser.role !== 'employer') {
         showToast('❌', 'No permission'); return;
       }
+      selectedCashOutCategory = null;
+      selectedCashOutItem = null;
+      document.getElementById('cashOutAmount').value = '';
+      document.getElementById('cashOutStore').value = '';
+      document.getElementById('cashOutItemSection').classList.add('hidden');
       renderCashOutCategories();
+      renderCashOutTemplates();
       openModal('cashOutModal');
     }
 
     function renderCashOutCategories() {
-      const container = document.getElementById('cashOutCategories');
+      const container = document.getElementById('cashOutCatGrid');
       container.innerHTML = Object.entries(DB.categories).map(([key, val]) => `
-        <button onclick="selectCashOutCategory('${key}')" class="category-btn p-2 rounded-lg border-2 border-gray-200 text-center btn-press" data-cat="${key}">
-          <div class="text-xl">${val.icon}</div>
-          <div class="text-xs mt-1 capitalize">${key}</div>
+        <button onclick="selectCashOutCategory('${key}')" class="cat-btn2 p-3 rounded-xl text-center btn-press" data-cat="${key}">
+          <div class="text-2xl">${val.icon}</div>
+          <div class="text-xs font-semibold mt-1 capitalize">${key}</div>
+        </button>
+      `).join('');
+    }
+
+    function renderCashOutTemplates() {
+      const container = document.getElementById('cashOutTemplates');
+      container.innerHTML = DB.templates.map(t => `
+        <button onclick="useTemplate('${t.category}', '${t.item}', ${t.amount})" class="flex-shrink-0 bg-white border border-gray-200 rounded-full px-3 py-2 text-xs font-medium btn-press whitespace-nowrap">
+          ${getCategoryIcon(t.category)} ${t.item} <span class="text-primary font-semibold">$${t.amount}</span>
         </button>
       `).join('');
     }
 
     function selectCashOutCategory(cat) {
       selectedCashOutCategory = cat;
-      document.querySelectorAll('.category-btn').forEach(btn => {
-        btn.classList.toggle('border-primary', btn.dataset.cat === cat);
-        btn.classList.toggle('bg-orange-50', btn.dataset.cat === cat);
+      selectedCashOutItem = null;
+      document.querySelectorAll('.cat-btn2').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.cat === cat);
       });
-      const suggestions = DB.categories[cat].items;
-      const sugEl = document.getElementById('itemSuggestions');
-      sugEl.innerHTML = suggestions.map(item => `
-        <div class="p-2 hover:bg-gray-100 cursor-pointer text-sm" onclick="document.getElementById('cashOutItem').value='${item}'">${item}</div>
+      const chipsDiv = document.getElementById('cashOutItemChips');
+      chipsDiv.innerHTML = DB.categories[cat].items.map(item => `
+        <button onclick="selectCashOutItem('${item}')" class="chip-btn2 px-3 py-1.5 rounded-full text-sm font-medium btn-press">${item}</button>
       `).join('');
-      sugEl.classList.remove('hidden');
+      document.getElementById('cashOutItemSection').classList.remove('hidden');
+    }
+
+    function selectCashOutItem(item) {
+      selectedCashOutItem = item;
+      document.querySelectorAll('.chip-btn2').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent === item);
+      });
     }
 
     function saveCashOut() {
-      const item = document.getElementById('cashOutItem').value;
       const amount = parseFloat(document.getElementById('cashOutAmount').value);
-      if (!selectedCashOutCategory || !item || !amount) {
-        showToast('⚠️', 'Please fill all fields'); return;
+      const store = document.getElementById('cashOutStore').value.trim();
+      if (!selectedCashOutCategory || !selectedCashOutItem || !amount) {
+        showToast('⚠️', 'Please select category, item and amount'); return;
       }
       const tx = {
         id: 't' + Date.now(), date: new Date().toISOString(), type: 'cash_out',
-        category: selectedCashOutCategory, item: item, amount: amount,
-        payment: 'cash', store: ''
+        category: selectedCashOutCategory, item: selectedCashOutItem, amount: amount,
+        payment: 'cash', store: store || 'Unknown'
       };
       DB.transactions.unshift(tx);
       DB.cashBalance -= amount;
-      updateShoppingHistory(item, selectedCashOutCategory, amount);
+      updateShoppingHistory(selectedCashOutItem, selectedCashOutCategory, amount);
       saveToStorage();
       updateBalances();
       renderRecentTransactions();
       renderHistory();
       closeModal('cashOutModal');
-      showToast('✅', `Saved: ${item} -$${amount.toFixed(2)}`);
-      document.getElementById('cashOutItem').value = '';
-      document.getElementById('cashOutAmount').value = '';
-      selectedCashOutCategory = null;
+      showToast('✅', `Saved: ${selectedCashOutItem} -$${amount.toFixed(2)}`);
     }
 
     function updateShoppingHistory(item, category, amount) {
@@ -903,75 +1093,408 @@
       }
     }
 
-    // ========== TRANSPORT ==========
+    // ========== VOICE ENTRY (PHASE 2) ==========
+    function openVoiceModal() {
+      voiceItems = [];
+      itemVoiceItems = [];
+      marketSegments = [];
+      marketRecording = false;
+      marketSeconds = 0;
+      clearInterval(marketTimerInterval);
+      setVoiceMode('batch');
+      openModal('voiceModal');
+    }
+
+    function setVoiceMode(mode) {
+      voiceMode = mode;
+      ['batch','item','market'].forEach(m => {
+        const btn = document.getElementById('vmode-' + m);
+        if (m === mode) {
+          btn.className = 'flex-1 py-2 rounded-lg text-sm font-semibold bg-primary text-white transition';
+        } else {
+          btn.className = 'flex-1 py-2 rounded-lg text-sm font-semibold bg-gray-100 text-gray-700 transition';
+        }
+      });
+      document.getElementById('voiceBatchPanel').classList.toggle('hidden', mode !== 'batch');
+      document.getElementById('voiceItemPanel').classList.toggle('hidden', mode !== 'item');
+      document.getElementById('voiceMarketPanel').classList.toggle('hidden', mode !== 'market');
+    }
+
+    // Batch Voice
+    function startVoiceRecord() {
+      document.getElementById('voiceRecordBtn').classList.add('pulse-record');
+      document.getElementById('voiceStatus').innerHTML = '<span class="text-red-500 font-bold">🔴 Recording...</span><br>Listening...';
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const rec = new SpeechRecognition();
+        rec.lang = 'en-US'; rec.continuous = true; rec.interimResults = true;
+        window.currentRecognition = rec;
+        rec.onresult = (e) => {
+          const transcript = Array.from(e.results).map(r => r[0].transcript).join(' ');
+          document.getElementById('voiceStatus').innerHTML = `<span class="text-gray-600">Hearing: "${transcript}"</span>`;
+        };
+        rec.start();
+      }
+    }
+
+    function stopVoiceRecord() {
+      document.getElementById('voiceRecordBtn').classList.remove('pulse-record');
+      document.getElementById('voiceStatus').textContent = 'Processing...';
+      if (window.currentRecognition) window.currentRecognition.stop();
+      setTimeout(() => {
+        voiceItems = [
+          { name: 'Apple', cat: 'fruit', amount: 35 },
+          { name: 'Banana', cat: 'fruit', amount: 12 },
+          { name: 'Pork', cat: 'meat', amount: 80 }
+        ];
+        renderVoiceResults();
+      }, 1200);
+    }
+
+    function renderVoiceResults() {
+      const container = document.getElementById('voiceParsedItems');
+      let total = 0;
+      container.innerHTML = voiceItems.map((item, i) => {
+        total += item.amount;
+        return `
+          <div class="flex justify-between items-center bg-gray-50 p-2.5 rounded-xl">
+            <div class="flex items-center gap-2">
+              <span>${getCategoryIcon(item.cat)}</span>
+              <div>
+                <div class="font-semibold text-sm">${item.name}</div>
+                <div class="text-xs text-gray-500 capitalize">${item.cat}</div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-primary">$${item.amount}</span>
+              <button onclick="removeVoiceItem(${i})" class="w-6 h-6 rounded-lg bg-red-100 text-red-500 text-xs">✕</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+      document.getElementById('voiceTotalAmt').textContent = '$' + total;
+      document.getElementById('voiceResults').classList.remove('hidden');
+      document.getElementById('voiceStatus').innerHTML = `Parsed <strong>${voiceItems.length} items</strong>! ✅`;
+    }
+
+    function removeVoiceItem(idx) {
+      voiceItems.splice(idx, 1);
+      renderVoiceResults();
+      if (voiceItems.length === 0) {
+        document.getElementById('voiceResults').classList.add('hidden');
+        document.getElementById('voiceStatus').innerHTML = 'Hold button & say:<br><em class="text-gray-400">"Apple thirty-five, Banana twelve, Pork eighty"</em>';
+      }
+    }
+
+    function saveVoiceItems() {
+      voiceItems.forEach(item => {
+        const tx = {
+          id: 't' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+          date: new Date().toISOString(), type: 'cash_out',
+          category: item.cat, item: item.name, amount: item.amount,
+          payment: 'cash', store: 'Voice Entry'
+        };
+        DB.transactions.unshift(tx);
+        DB.cashBalance -= item.amount;
+        updateShoppingHistory(item.name, item.cat, item.amount);
+      });
+      const total = voiceItems.reduce((s, i) => s + i.amount, 0);
+      saveToStorage();
+      updateBalances();
+      renderRecentTransactions();
+      renderHistory();
+      closeModal('voiceModal');
+      showToast('✅', `${voiceItems.length} items saved! Total: $${total}`);
+    }
+
+    // Item by Item Voice
+    function startItemRecord() {
+      document.getElementById('itemRecordBtn').classList.add('pulse-record');
+      document.getElementById('itemVoiceStatus').innerHTML = '<span class="text-red-500 font-bold">🔴 Recording...</span>';
+    }
+
+    function stopItemRecord() {
+      document.getElementById('itemRecordBtn').classList.remove('pulse-record');
+      document.getElementById('itemVoiceStatus').textContent = 'Processing...';
+      setTimeout(() => {
+        const mockItems = [{ name: 'Apple', cat: 'fruit', amount: 35 }, { name: 'Pork', cat: 'meat', amount: 80 }];
+        tempVoiceItem = mockItems[itemVoiceItems.length % mockItems.length];
+        document.getElementById('itemVoiceResult').innerHTML = `
+          <div class="bg-gray-50 p-3 rounded-xl flex justify-between items-center">
+            <div class="flex items-center gap-2">
+              <span>${getCategoryIcon(tempVoiceItem.cat)}</span>
+              <div><div class="font-semibold text-sm">${tempVoiceItem.name}</div><div class="text-xs text-gray-500 capitalize">${tempVoiceItem.cat}</div></div>
+            </div>
+            <span class="font-bold text-primary">$${tempVoiceItem.amount}</span>
+          </div>
+        `;
+        document.getElementById('itemVoiceResult').classList.remove('hidden');
+        document.getElementById('itemVoiceActions').classList.remove('hidden');
+        document.getElementById('itemVoiceStatus').innerHTML = 'Is this correct?';
+      }, 800);
+    }
+
+    function confirmItemVoice() {
+      if (tempVoiceItem) itemVoiceItems.push(tempVoiceItem);
+      document.getElementById('itemNum').textContent = itemVoiceItems.length + 1;
+      document.getElementById('itemVoiceResult').classList.add('hidden');
+      document.getElementById('itemVoiceActions').classList.add('hidden');
+      document.getElementById('itemVoiceStatus').innerHTML = 'Say next item:<br><em class="text-gray-400">"Banana twelve dollars"</em>';
+    }
+
+    function retryItemVoice() {
+      document.getElementById('itemVoiceResult').classList.add('hidden');
+      document.getElementById('itemVoiceActions').classList.add('hidden');
+      document.getElementById('itemVoiceStatus').textContent = 'Try again. Say clearly.';
+    }
+
+    function finishItemVoice() {
+      itemVoiceItems.forEach(item => {
+        const tx = {
+          id: 't' + Date.now() + '_' + Math.random().toString(36).substr(2,5),
+          date: new Date().toISOString(), type: 'cash_out',
+          category: item.cat, item: item.name, amount: item.amount,
+          payment: 'cash', store: 'Voice Entry'
+        };
+        DB.transactions.unshift(tx);
+        DB.cashBalance -= item.amount;
+        updateShoppingHistory(item.name, item.cat, item.amount);
+      });
+      const total = itemVoiceItems.reduce((s, i) => s + i.amount, 0);
+      saveToStorage();
+      updateBalances();
+      renderRecentTransactions();
+      renderHistory();
+      closeModal('voiceModal');
+      showToast('✅', `${itemVoiceItems.length} items saved! Total: $${total}`);
+    }
+
+    // Market Mode
+    function toggleMarketRecord() {
+      const btn = document.getElementById('marketRecBtn');
+      if (!marketRecording) {
+        marketRecording = true;
+        btn.classList.add('pulse-record');
+        btn.textContent = '⏸️';
+        marketTimerInterval = setInterval(() => {
+          marketSeconds++;
+          const m = Math.floor(marketSeconds / 60).toString().padStart(2, '0');
+          const s = (marketSeconds % 60).toString().padStart(2, '0');
+          document.getElementById('marketTimer').textContent = `${m}:${s}`;
+        }, 1000);
+      } else {
+        marketRecording = false;
+        btn.classList.remove('pulse-record');
+        btn.textContent = '🔴';
+        clearInterval(marketTimerInterval);
+        const items = ['Apple $35', 'Pork $80', 'Rice $45', 'Vegetables $25'];
+        marketSegments.push(items[marketSegments.length % items.length]);
+        renderMarketSegments();
+      }
+    }
+
+    function renderMarketSegments() {
+      const container = document.getElementById('marketSegments');
+      container.innerHTML = marketSegments.map((seg, i) => `
+        <div class="bg-gray-50 p-2 rounded-lg flex justify-between items-center text-sm">
+          <span><span class="font-bold text-primary">#${i+1}</span> ${seg}</span>
+          <button onclick="marketSegments.splice(${i},1);renderMarketSegments();" class="text-red-400 text-xs">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function finishMarket() {
+      if (marketSegments.length === 0) { showToast('❌', 'No items recorded'); return; }
+      clearInterval(marketTimerInterval);
+      marketRecording = false;
+      document.getElementById('marketRecBtn').textContent = '🔴';
+      const items = marketSegments.map(seg => {
+        const parts = seg.split(' $');
+        return { name: parts[0], cat: 'other', amount: parseFloat(parts[1]) || 0 };
+      }).filter(i => i.amount > 0);
+      items.forEach(item => {
+        const tx = { id: 't' + Date.now() + '_' + Math.random().toString(36).substr(2,5), date: new Date().toISOString(), type: 'cash_out', category: item.cat, item: item.name, amount: item.amount, payment: 'cash', store: 'Market' };
+        DB.transactions.unshift(tx);
+        DB.cashBalance -= item.amount;
+      });
+      const total = items.reduce((s, i) => s + i.amount, 0);
+      saveToStorage();
+      updateBalances();
+      renderRecentTransactions();
+      renderHistory();
+      closeModal('voiceModal');
+      showToast('✅', `${items.length} market items saved! $${total}`);
+    }
+
+    // Combo Voice Demo
+    function demoComboVoice() {
+      const result = document.getElementById('comboResult');
+      result.classList.remove('hidden');
+      result.innerHTML = `
+        <div class="bg-white rounded-xl p-3 border border-amber-200">
+          <div class="font-bold text-sm mb-2">🍲 Soup Combo — $55</div>
+          <div class="text-xs text-gray-500 mb-2">AI breakdown:</div>
+          <div class="space-y-1 text-xs mb-2">
+            <div class="flex justify-between"><span>1. Soup Base [grocery]</span><span class="font-semibold">$15</span></div>
+            <div class="flex justify-between"><span>2. Pork [meat]</span><span class="font-semibold">$20</span></div>
+            <div class="flex justify-between"><span>3. Mixed Veg [vegetable]</span><span class="font-semibold">$12</span></div>
+            <div class="flex justify-between"><span>4. Corn [vegetable]</span><span class="font-semibold">$8</span></div>
+          </div>
+          <div class="border-t pt-2 flex justify-between font-bold text-sm mb-2"><span>Total</span><span class="text-primary">$55 ✅</span></div>
+          <div class="flex gap-2">
+            <button onclick="saveCombo('one')" class="flex-1 bg-secondary text-white py-2 rounded-lg text-xs font-semibold">💾 One</button>
+            <button onclick="saveCombo('split')" class="flex-1 bg-primary text-white py-2 rounded-lg text-xs font-semibold">📋 Split</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function saveCombo(mode) {
+      if (mode === 'one') {
+        const tx = { id: 't' + Date.now(), date: new Date().toISOString(), type: 'cash_out', category: 'combo', item: 'Soup Combo', amount: 55, payment: 'cash', store: 'Wet Market', isCombo: true, comboItems: [{name:'Soup Base',amount:15,category:'grocery'},{name:'Pork',amount:20,category:'meat'},{name:'Mixed Vegetables',amount:12,category:'vegetable'},{name:'Corn',amount:8,category:'vegetable'}] };
+        DB.transactions.unshift(tx); DB.cashBalance -= 55;
+        saveToStorage(); updateBalances(); renderRecentTransactions(); renderHistory();
+        closeModal('voiceModal');
+        showToast('✅', 'Saved: Soup Combo $55');
+      } else {
+        const items = [{name:'Soup Base',cat:'grocery',amount:15},{name:'Pork',cat:'meat',amount:20},{name:'Mixed Vegetables',cat:'vegetable',amount:12},{name:'Corn',cat:'vegetable',amount:8}];
+        items.forEach(item => { DB.transactions.unshift({id:'t'+Date.now()+'_'+Math.random().toString(36).substr(2,5),date:new Date().toISOString(),type:'cash_out',category:item.cat,item:item.name,amount:item.amount,payment:'cash',store:'Wet Market'}); DB.cashBalance -= item.amount; });
+        saveToStorage(); updateBalances(); renderRecentTransactions(); renderHistory();
+        closeModal('voiceModal');
+        showToast('✅', 'Saved as 4 items! Total: $55');
+      }
+    }
+
+    // ========== CAMERA ID (PHASE 2) ==========
+    function openCameraModal() {
+      document.getElementById('cameraResult').classList.add('hidden');
+      openModal('cameraModal');
+    }
+
+    function triggerCamera() {
+      document.getElementById('cameraFileInput').click();
+    }
+
+    function handleCameraFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      showToast('📷', 'Analyzing photo...');
+      setTimeout(() => {
+        const results = [
+          { name: 'Apple', cat: 'fruit', icon: '🍎', confidence: 92 },
+          { name: 'Banana', cat: 'fruit', icon: '🍌', confidence: 88 },
+          { name: 'Pork', cat: 'meat', icon: '🥩', confidence: 85 },
+          { name: 'Carrots', cat: 'vegetable', icon: '🥕', confidence: 90 }
+        ];
+        const result = results[Math.floor(Math.random() * results.length)];
+        document.getElementById('camIcon').textContent = result.icon;
+        document.getElementById('camName').textContent = result.name;
+        document.getElementById('camCat').textContent = `Category: ${result.cat} ${getCategoryIcon(result.cat)}`;
+        document.getElementById('camConfidence').textContent = `Confidence: ${result.confidence}%`;
+        document.getElementById('camAmount').value = '';
+        document.getElementById('cameraResult').dataset.item = result.name;
+        document.getElementById('cameraResult').dataset.cat = result.cat;
+        document.getElementById('cameraResult').classList.remove('hidden');
+      }, 1500);
+    }
+
+    function saveCameraResult() {
+      const amount = parseFloat(document.getElementById('camAmount').value);
+      if (!amount) { showToast('⚠️', 'Please enter amount'); return; }
+      const resultDiv = document.getElementById('cameraResult');
+      const item = resultDiv.dataset.item;
+      const cat = resultDiv.dataset.cat;
+      const tx = { id: 't' + Date.now(), date: new Date().toISOString(), type: 'cash_out', category: cat, item: item, amount: amount, payment: 'cash', store: 'Camera ID' };
+      DB.transactions.unshift(tx); DB.cashBalance -= amount;
+      updateShoppingHistory(item, cat, amount);
+      saveToStorage(); updateBalances(); renderRecentTransactions(); renderHistory();
+      closeModal('cameraModal');
+      showToast('✅', `Saved: ${item} $${amount}`);
+    }
+
+    function resetCameraModal() {
+      document.getElementById('cameraResult').classList.add('hidden');
+      document.getElementById('cameraFileInput').value = '';
+    }
+
+    // ========== TRANSPORT (ENHANCED) ==========
     function openTransport() {
       renderTransportHistory();
       openModal('transportModal');
     }
 
     function renderTransportHistory() {
-      const container = document.getElementById('transportHistory');
+      const container = document.getElementById('transHistoryList');
       const sorted = [...DB.transportHistory].sort((a, b) => b.useCount - a.useCount);
-      container.innerHTML = sorted.map(h => `
-        <div class="p-3 bg-gray-50 rounded-lg cursor-pointer btn-press" onclick="useTransportHistory('${h.id}')">
-          <div class="flex items-center justify-between">
-            <div class="text-sm font-medium">${h.type === 'mtr' ? `MTR ${h.from}-${h.to}` : `${h.type} ${h.route}`}</div>
-            <div class="text-sm font-bold">$${h.amount.toFixed(1)}</div>
+      if (sorted.length === 0) {
+        document.getElementById('transHistorySection').classList.add('hidden');
+        return;
+      }
+      document.getElementById('transHistorySection').classList.remove('hidden');
+      container.innerHTML = sorted.slice(0, 5).map(h => {
+        const label = h.type === 'mtr' ? `${h.from} → ${h.to}` : `${h.type} ${h.route}`;
+        return `
+          <div class="bg-gray-50 p-2.5 rounded-xl flex justify-between items-center cursor-pointer btn-press" onclick="useTransportHistory('${h.id}')">
+            <div class="flex items-center gap-2">
+              <span>${getCategoryIcon('transport')}</span>
+              <div>
+                <div class="text-sm font-medium">${label}</div>
+                <div class="text-xs text-gray-400">Used ${h.useCount}x</div>
+              </div>
+            </div>
+            <span class="font-bold text-primary">$${h.amount.toFixed(1)}</span>
           </div>
-          <div class="text-xs text-gray-500">Used ${h.useCount}x • Last: ${formatDate(h.lastUsed)}</div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function useTransportHistory(id) {
       const h = DB.transportHistory.find(t => t.id === id);
       if (!h) return;
-      document.getElementById('transportRoute').value = h.type === 'mtr' ? h.from : h.route;
-      document.getElementById('transportTo').value = h.to || '';
-      document.getElementById('transportAmount').value = h.amount;
       setTransportType(h.type);
+      document.getElementById('transAmount').value = h.amount;
+      if (h.type === 'mtr') {
+        document.getElementById('transFrom').value = h.from;
+        document.getElementById('transTo').value = h.to;
+      } else {
+        document.getElementById('transRoute').value = h.route;
+      }
     }
 
     function setTransportType(type) {
       currentTransportType = type;
-      document.querySelectorAll('.transport-type-btn').forEach(btn => {
-        btn.classList.toggle('border-primary', btn.dataset.type === type);
-        btn.classList.toggle('bg-orange-50', btn.dataset.type === type);
+      document.querySelectorAll('.trans-type-btn').forEach(btn => {
+        const isSel = btn.dataset.type === type;
+        btn.classList.toggle('border-primary', isSel);
+        btn.classList.toggle('bg-orange-50', isSel);
       });
-      document.getElementById('transportTo').classList.toggle('hidden', type !== 'mtr');
+      document.getElementById('mtrFields').classList.toggle('hidden', type !== 'mtr');
+      document.getElementById('transRoute').classList.toggle('hidden', type === 'mtr');
+      const fares = type === 'mtr' ? [12,14.5,18.5,25,30] : type === 'bus' ? [4.5,7.2,10.1,12.1,22] : type === 'minibus' ? [4,5.5,7.2,9] : [15,25,35];
+      document.getElementById('transQuickFares').innerHTML = fares.map(f => `
+        <button onclick="document.getElementById('transAmount').value=${f}" class="bg-gray-100 rounded-full px-3 py-1.5 text-xs font-semibold whitespace-nowrap">$${f.toFixed(1)}</button>
+      `).join('');
     }
 
     function saveTransport() {
-      const route = document.getElementById('transportRoute').value;
-      const to = document.getElementById('transportTo').value;
-      const amount = parseFloat(document.getElementById('transportAmount').value);
-      if (!route || !amount) { showToast('⚠️', 'Please fill route and amount'); return; }
-      const itemName = currentTransportType === 'mtr' ? `MTR ${route}-${to}` : `${currentTransportType} ${route}`;
-      const tx = {
-        id: 't' + Date.now(), date: new Date().toISOString(), type: 'transport',
-        category: 'transport', item: itemName, amount: amount, payment: 'octopus', store: ''
-      };
-      DB.transactions.unshift(tx);
-      DB.octopusBalance -= amount;
-      const existing = DB.transportHistory.find(h => 
-        h.type === currentTransportType && 
-        (currentTransportType === 'mtr' ? (h.from === route && h.to === to) : h.route === route)
-      );
-      if (existing) { existing.useCount++; existing.lastUsed = new Date().toISOString(); }
-      else {
-        DB.transportHistory.push({
-          id: 'th' + Date.now(), type: currentTransportType,
-          route: currentTransportType !== 'mtr' ? route : '',
-          from: currentTransportType === 'mtr' ? route : '',
-          to: currentTransportType === 'mtr' ? to : '',
-          amount: amount, useCount: 1, lastUsed: new Date().toISOString()
-        });
+      const amount = parseFloat(document.getElementById('transAmount').value);
+      if (!amount) { showToast('⚠️', 'Please enter fare'); return; }
+      let route = '', from = '', to = '';
+      if (currentTransportType === 'mtr') {
+        from = document.getElementById('transFrom').value.trim();
+        to = document.getElementById('transTo').value.trim();
+        if (!from || !to) { showToast('⚠️', 'Enter from and to'); return; }
+      } else {
+        route = document.getElementById('transRoute').value.trim();
+        if (!route) { showToast('⚠️', 'Enter route number'); return; }
       }
-      saveToStorage();
-      updateBalances();
-      renderRecentTransactions();
-      renderTransportHistory();
-      renderHistory();
+      const itemName = currentTransportType === 'mtr' ? `MTR ${from}-${to}` : `${currentTransportType} ${route}`;
+      const tx = { id: 't' + Date.now(), date: new Date().toISOString(), type: 'transport', category: 'transport', item: itemName, amount: amount, payment: 'octopus', store: '' };
+      DB.transactions.unshift(tx); DB.octopusBalance -= amount;
+      const existing = DB.transportHistory.find(h => h.type === currentTransportType && (currentTransportType === 'mtr' ? (h.from === from && h.to === to) : h.route === route));
+      if (existing) { existing.useCount++; existing.lastUsed = new Date().toISOString(); }
+      else { DB.transportHistory.push({ id: 'th' + Date.now(), type: currentTransportType, route: currentTransportType !== 'mtr' ? route : '', from: currentTransportType === 'mtr' ? from : '', to: currentTransportType === 'mtr' ? to : '', amount: amount, useCount: 1, lastUsed: new Date().toISOString() }); }
+      saveToStorage(); updateBalances(); renderRecentTransactions(); renderHistory();
       closeModal('transportModal');
       showToast('✅', `Transport saved: -$${amount.toFixed(2)}`);
     }
@@ -984,31 +1507,22 @@
     function setTopUpLocation(loc) {
       currentTopUpLocation = loc;
       document.querySelectorAll('.topup-loc').forEach(btn => {
-        const isSelected = (loc === '7-11' && btn.textContent.includes('7-11')) ||
-                          (loc === 'mtr' && btn.textContent.includes('MTR')) ||
-                          (loc === 'other' && btn.textContent.includes('Other'));
-        btn.classList.toggle('border-primary', isSelected);
-        btn.classList.toggle('bg-orange-50', isSelected);
+        const txt = btn.textContent;
+        const isSel = (loc === '7-11' && txt.includes('7-11')) || (loc === 'mtr' && txt.includes('MTR')) || (loc === 'other' && txt.includes('Other'));
+        btn.classList.toggle('border-primary', isSel);
+        btn.classList.toggle('bg-orange-50', isSel);
       });
     }
 
     function saveTopUp() {
       const amount = parseFloat(document.getElementById('topUpAmount').value);
       if (!amount) { showToast('⚠️', 'Please enter amount'); return; }
-      const tx = {
-        id: 't' + Date.now(), date: new Date().toISOString(), type: 'top_up',
-        category: 'other', item: `Top-up @ ${currentTopUpLocation}`, amount: amount,
-        payment: 'cash', store: currentTopUpLocation
-      };
-      DB.transactions.unshift(tx);
-      DB.octopusBalance += amount;
-      DB.cashBalance -= amount;
-      saveToStorage();
-      updateBalances();
-      renderRecentTransactions();
-      renderHistory();
+      const locNames = { '7-11': '7-Eleven', 'mtr': 'MTR Station', 'other': 'Other' };
+      const tx = { id: 't' + Date.now(), date: new Date().toISOString(), type: 'top_up', category: 'other', item: `Top-up @ ${locNames[currentTopUpLocation]}`, amount: amount, payment: 'cash', store: currentTopUpLocation };
+      DB.transactions.unshift(tx); DB.octopusBalance += amount; DB.cashBalance -= amount;
+      saveToStorage(); updateBalances(); renderRecentTransactions(); renderHistory();
       closeModal('topUpModal');
-      showToast('✅', `Top-up: +$${amount.toFixed(2)} to Octopus`);
+      showToast('✅', `Top-up: +$${amount.toFixed(0)} to Octopus`);
     }
 
     // ========== CASH IN ==========
@@ -1019,27 +1533,19 @@
     function setCashInSource(src) {
       currentCashInSource = src;
       document.querySelectorAll('.cashin-src').forEach(btn => {
-        const isSelected = (src === 'employer' && btn.textContent.includes('Employer')) ||
-                          (src === 'other' && btn.textContent.includes('Other'));
-        btn.classList.toggle('border-primary', isSelected);
-        btn.classList.toggle('bg-orange-50', isSelected);
+        const isSel = (src === 'employer' && btn.textContent.includes('Employer')) || (src === 'other' && btn.textContent.includes('Other'));
+        btn.classList.toggle('border-primary', isSel);
+        btn.classList.toggle('bg-orange-50', isSel);
       });
     }
 
     function saveCashIn() {
       const amount = parseFloat(document.getElementById('cashInAmount').value);
       if (!amount) { showToast('⚠️', 'Please enter amount'); return; }
-      const tx = {
-        id: 't' + Date.now(), date: new Date().toISOString(), type: 'cash_in',
-        category: 'other', item: `Cash from ${currentCashInSource === 'employer' ? 'Employer' : 'Other'}`,
-        amount: amount, payment: 'cash', store: ''
-      };
-      DB.transactions.unshift(tx);
-      DB.cashBalance += amount;
-      saveToStorage();
-      updateBalances();
-      renderRecentTransactions();
-      renderHistory();
+      const tx = { id: 't' + Date.now(), date: new Date().toISOString(), type: 'cash_in', category: 'other', item: `Cash from ${currentCashInSource === 'employer' ? 'Employer' : 'Other'}`, amount: amount, payment: 'cash', store: '' })
+;
+      DB.transactions.unshift(tx); DB.cashBalance += amount;
+      saveToStorage(); updateBalances(); renderRecentTransactions(); renderHistory();
       closeModal('cashInModal');
       showToast('✅', `Cash in: +$${amount.toFixed(2)}`);
     }
@@ -1088,9 +1594,7 @@
     function searchHistory() {
       const query = document.getElementById('historySearch').value.toLowerCase();
       if (!query) { renderHistory(); return; }
-      const filtered = DB.transactions.filter(t => 
-        t.item.toLowerCase().includes(query) || (t.store && t.store.toLowerCase().includes(query))
-      );
+      const filtered = DB.transactions.filter(t => t.item.toLowerCase().includes(query) || (t.store && t.store.toLowerCase().includes(query)));
       const container = document.getElementById('historyList');
       container.innerHTML = `
         <div class="text-xs font-semibold text-gray-500 mb-2">Search Results (${filtered.length})</div>
@@ -1122,8 +1626,6 @@
 
     // ========== PLACEHOLDERS ==========
     function openScan() { showToast('📷', 'Scan Receipt - Coming in Phase 6'); }
-    function openVoice() { showToast('🎤', 'Voice Entry - Coming in Phase 2'); }
-    function openCamera() { showToast('📷', 'Camera ID - Coming in Phase 6'); }
     function createNewList() { showToast('🛒', 'Create List - Coming in Phase 4'); }
     function openList(id) { showToast('🛒', 'Open List ' + id + ' - Coming in Phase 4'); }
     function takePhotoDish() { showToast('📷', 'Photo Dish - Coming in Phase 5'); }
@@ -1136,12 +1638,7 @@
     function viewTransaction(id) { showToast('📝', 'View Transaction ' + id); }
     function exportData() { showToast('📥', 'Export - Coming in Phase 9'); }
     function importData() { showToast('📤', 'Import - Coming in Phase 9'); }
-    function clearAllData() { 
-      if (confirm('Clear ALL data? This cannot be undone!')) {
-        localStorage.removeItem('foodLogData');
-        location.reload();
-      }
-    }
+    function clearAllData() { if (confirm('Clear ALL data? This cannot be undone!')) { localStorage.removeItem('foodLogData'); location.reload(); } }
     function configDrive() { showToast('☁️', 'Drive Config - Coming in Phase 9'); }
     function configGemini() { showToast('🤖', 'Gemini Config - Coming in Phase 9'); }
     function exportCSV() { showToast('📄', 'Export CSV - Coming in Phase 8'); }
