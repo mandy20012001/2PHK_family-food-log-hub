@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#f97316">
+  <title>Family Food Log Hub</title>
+  <link rel="manifest" href="manifest.json">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#f97316',
+            primaryDark: '#ea580c',
+            secondary: '#10b981',
+            danger: '#ef4444',
+            warning: '#f59e0b',
+            info: '#3b82f6'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; overscroll-behavior-y: none; }
+    .page { display: none; min-height: 100vh; padding-bottom: 80px; }
+    .page.active { display: block; }
+    .btn-press:active { transform: scale(0.96); }
+    .slide-up { animation: slideUp 0.3s ease-out; }
+    @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; border-top: 1px solid #e5e7eb; z-index: 50; }
+    .nav-item.active { color: #f97316; }
+    .card-shadow { box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100; align-items: center; justify-content: center; padding: 16px; }
+    .modal.active { display: flex; }
+    .modal-content { background: white; border-radius: 16px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+    .user-select { border: 2px solid #e5e7eb; transition: all 0.2s; }
+    .user-select.selected { border-color: #f97316; background: #fff7ed; }
+    .quick-btn { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; }
+    .amount-input { font-size: 32px; text-align: center; letter-spacing: 2px; }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+  <!-- ========== LOGIN PAGE ========== -->
+  <div id="loginPage" class="page active flex flex-col items-center justify-center min-h-screen p-6 bg-gradient-to-b from-orange-50 to-white">
+    <div class="w-full max-w-sm slide-up">
+      <div class="text-center mb-8">
+        <div class="text-7xl mb-3">🍳</div>
+        <h1 class="text-2xl font-bold text-gray-900">Family Food Log Hub</h1>
+        <p class="text-sm text-gray-500 mt-1">Simple. Smart. Together.</p>
+      </div>
+
+      <div class="space-y-3 mb-6">
+        <div id="selectMarie" class="user-select rounded-xl p-4 cursor-pointer btn-press" onclick="selectUser('marie')">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center text-2xl">👩</div>
+            <div>
+              <div class="font-semibold text-lg">Marie</div>
+              <div class="text-xs text-gray-500">Helper / Daily User</div>
+            </div>
+            <div class="ml-auto w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center check-circle">
+              <div class="w-3 h-3 rounded-full bg-primary hidden check-dot"></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="selectEmployer" class="user-select rounded-xl p-4 cursor-pointer btn-press" onclick="selectUser('employer')">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-2xl">👨‍💼</div>
+            <div>
+              <div class="font-semibold text-lg">Madam or Sir</div>
+              <div class="text-xs text-gray-500">Employer / Admin</div>
+            </div>
+            <div class="ml-auto w-6 h-6 rounded-full border-2 border-gray-300 flex items-center justify-center check-circle">
+              <div class="w-3 h-3 rounded-full bg-primary hidden check-dot"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="text-sm font-medium text-gray-700 mb-1 block">Password</label>
+        <input type="password" id="passwordInput" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none text-lg text-center tracking-widest" placeholder="••••••••" maxlength="8">
+      </div>
+
+      <label class="flex items-center gap-2 mb-6 cursor-pointer">
+        <input type="checkbox" id="rememberMe" class="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary">
+        <span class="text-sm text-gray-600">Remember me</span>
+      </label>
+
+      <button onclick="login()" class="w-full bg-primary hover:bg-primaryDark text-white font-semibold py-4 rounded-xl text-lg btn-press transition-colors shadow-lg shadow-orange-200">
+        🔓 Login
+      </button>
+
+      <div id="loginError" class="hidden mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-center text-red-600 text-sm">
+        Wrong password. Please try again.
+      </div>
+
+      <div id="autoLoginHint" class="hidden mt-4 text-center text-sm text-gray-500">
+        Welcome back! Logging in...
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== MAIN APP ========== -->
+  <div id="appContainer" class="hidden">
+
+    <header class="sticky top-0 z-40 bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between">
+      <div>
+        <div class="text-xs text-gray-500" id="greetingText">Welcome back</div>
+        <div class="font-bold text-lg" id="userNameDisplay">Marie! 👋</div>
+      </div>
+      <div class="flex items-center gap-2">
+        <button onclick="showPage('settings')" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center btn-press">⚙️</button>
+        <button onclick="logout()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center btn-press">🚪</button>
+      </div>
+    </header>
+
+    <!-- HOME PAGE -->
+    <div id="homePage" class="page active p-4 space-y-4">
+
+      <div id="todayMenuCard" class="hidden bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-4 text-white card-shadow">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-xs font-medium bg-white/20 px-2 py-1 rounded-full">📅 TODAY'S MENU</span>
+          <span class="text-xs opacity-80" id="todayMenuTime">DINNER</span>
+        </div>
+        <div class="font-bold text-xl mb-1" id="todayMenuDish">糖醋排骨</div>
+        <div class="text-sm opacity-90 mb-3" id="todayMenuDishEn">Sweet & Sour Pork Ribs</div>
+        <div class="flex gap-2">
+          <button onclick="viewTodayRecipe()" class="flex-1 bg-white/20 hover:bg-white/30 py-2 rounded-lg text-sm font-medium btn-press">👁️ View Recipe</button>
+          <button onclick="markCooked()" class="flex-1 bg-white text-orange-600 py-2 rounded-lg text-sm font-medium btn-press">✅ Cooked!</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-white rounded-2xl p-4 card-shadow border-l-4 border-blue-500">
+          <div class="text-xs text-gray-500 mb-1">💳 Octopus</div>
+          <div class="text-2xl font-bold text-gray-900" id="octopusBalance">$335.40</div>
+          <div class="text-xs text-gray-400 mt-1">Tap card balance</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 card-shadow border-l-4 border-green-500">
+          <div class="text-xs text-gray-500 mb-1">💵 Cash</div>
+          <div class="text-2xl font-bold text-gray-900" id="cashBalance">$383.60</div>
+          <div class="text-xs text-gray-400 mt-1">Physical cash</div>
+        </div>
+      </div>
+
+      <div id="lowBalanceAlert" class="hidden bg-yellow-50 border border-yellow-200 rounded-xl p-3 flex items-center gap-3">
+        <span class="text-2xl">⚠️</span>
+        <div>
+          <div class="text-sm font-medium text-yellow-800">Low Balance Alert</div>
+          <div class="text-xs text-yellow-600">Octopus below $50. Please top up!</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="text-sm font-semibold text-gray-700 mb-3">Quick Actions</div>
+        <div class="grid grid-cols-4 gap-3">
+          <button onclick="openScan()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+            <span class="text-2xl">📷</span>
+            <span class="text-xs font-medium text-gray-700 text-center leading-tight">Scan<br>Receipt</span>
+          </button>
+          <button onclick="openVoice()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+            <span class="text-2xl">🎤</span>
+            <span class="text-xs font-medium text-gray-700 text-center leading-tight">Voice<br>Entry</span>
+          </button>
+          <button onclick="openCamera()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+            <span class="text-2xl">📷</span>
+            <span class="text-xs font-medium text-gray-700 text-center leading-tight">Camera<br>ID</span>
+          </button>
+          <button onclick="openCashOut()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+            <span class="text-2xl">💵</span>
+            <span class="text-xs font-medium text-gray-700 text-center leading-tight">Cash<br>Out</span>
+          </button>
+          <button onclick="openCashIn()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+            <span class="text-2xl">💰</span>
+            <span class="text-xs font-medium text-gray-700 text-center leading-tight">Cash<br>In</span>
+          </button>
+          <button onclick="openTransport()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+            <span class="text-2xl">🚌</span>
+            <span class="text-xs font-medium text-gray-700 text-center leading-tight">Trans-<br>port</span>
+          </button>
+          <button onclick="openTopUp()" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+            <span class="text-2xl">➕</span>
+            <span class="text-xs font-medium text-gray-700 text-center leading-tight">Top-<br>up</span>
+          </button>
+          <button onclick="showPage('shopping')" class="quick-btn bg-white rounded-2xl p-3 card-shadow btn-press">
+            <span class="text-2xl">🛒</span>
+            <span class="text-xs font-medium text-gray-700 text-center leading-tight">Shopping<br>List</span>
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="text-sm font-semibold text-gray-700">Recent Transactions</div>
+          <button onclick="showPage('history')" class="text-xs text-primary font-medium">View All →</button>
+        </div>
+        <div id="recentTransactions" class="space-y-2"></div>
+      </div>
+
+      <div>
+        <div class="text-sm font-semibold text-gray-700 mb-3">Quick Templates</div>
+        <div id="quickTemplates" class="flex gap-2 overflow-x-auto no-scrollbar pb-2"></div>
+      </div>
+    </div>
+
+    <!-- SHOPPING PAGE -->
+    <div id="shoppingPage" class="page p-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">🛒 Shopping Lists</h2>
+        <button onclick="createNewList()" class="bg-primary text-white px-4 py-2 rounded-xl text-sm font-medium btn-press">＋ New List</button>
+      </div>
+      <div id="shoppingLists" class="space-y-3">
+        <div class="bg-white rounded-2xl p-4 card-shadow cursor-pointer btn-press" onclick="openList('list_001')">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-semibold">Monday Market</div>
+            <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">3/8 ✅</span>
+          </div>
+          <div class="text-xs text-gray-500">Created by: Employer • 2 days ago</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 card-shadow cursor-pointer btn-press" onclick="openList('list_002')">
+          <div class="flex items-center justify-between mb-2">
+            <div class="font-semibold">Sunday Cooking</div>
+            <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">0/5 ⏳</span>
+          </div>
+          <div class="text-xs text-gray-500">Created by: Marie • Shared</div>
+        </div>
+      </div>
+      <button onclick="showPage('shoppingHistory')" class="mt-4 w-full py-3 bg-gray-100 rounded-xl text-sm font-medium text-gray-700 btn-press">📋 History</button>
+    </div>
+
+    <!-- COOKING PAGE -->
+    <div id="cookingPage" class="page p-4">
+      <h2 class="text-xl font-bold mb-4">🍳 What to Cook?</h2>
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <button onclick="takePhotoDish()" class="bg-white rounded-2xl p-4 card-shadow btn-press text-center">
+          <div class="text-3xl mb-2">📷</div>
+          <div class="text-sm font-medium">Take Photo</div>
+        </button>
+        <button onclick="sayDishName()" class="bg-white rounded-2xl p-4 card-shadow btn-press text-center">
+          <div class="text-3xl mb-2">🎤</div>
+          <div class="text-sm font-medium">Say Dish Name</div>
+        </button>
+        <button onclick="typeDishName()" class="bg-white rounded-2xl p-4 card-shadow btn-press text-center">
+          <div class="text-3xl mb-2">⌨️</div>
+          <div class="text-sm font-medium">Type Dish Name</div>
+        </button>
+        <button onclick="createOwnRecipe()" class="bg-white rounded-2xl p-4 card-shadow btn-press text-center">
+          <div class="text-3xl mb-2">🎤</div>
+          <div class="text-sm font-medium">Create My Own</div>
+        </button>
+      </div>
+      <div class="text-sm font-semibold text-gray-700 mb-3">Recent Recipes</div>
+      <div id="recentRecipes" class="space-y-3">
+        <div class="bg-white rounded-2xl p-4 card-shadow cursor-pointer btn-press" onclick="viewRecipe('rec_001')">
+          <div class="flex items-center gap-3">
+            <div class="text-3xl">🥡</div>
+            <div class="flex-1">
+              <div class="font-semibold">糖醋排骨 / Sweet & Sour Pork</div>
+              <div class="text-xs text-gray-500">⭐ Employer • 📷 3 photos • Cooked 3x</div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 card-shadow cursor-pointer btn-press" onclick="viewRecipe('rec_002')">
+          <div class="flex items-center gap-3">
+            <div class="text-3xl">🍜</div>
+            <div class="flex-1">
+              <div class="font-semibold">番茄炒蛋 / Tomato Egg</div>
+              <div class="text-xs text-gray-500">⭐ Employer • 📷 1 photo • Cooked 5x</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORT PAGE -->
+    <div id="reportPage" class="page p-4">
+      <h2 class="text-xl font-bold mb-4">📊 Reports</h2>
+      <div class="bg-white rounded-2xl p-4 card-shadow mb-4 text-center">
+        <div class="text-sm text-gray-500 mb-1">This Week Total</div>
+        <div class="text-4xl font-bold text-gray-900" id="weekTotal">$1,245.00</div>
+        <div class="text-xs text-gray-400 mt-1">Jul 16 - Jul 22</div>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-white rounded-2xl p-4 card-shadow text-center">
+          <div class="text-xs text-gray-500 mb-1">Octopus Spent</div>
+          <div class="text-xl font-bold text-blue-600">$680.50</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 card-shadow text-center">
+          <div class="text-xs text-gray-500 mb-1">Cash Spent</div>
+          <div class="text-xl font-bold text-green-600">$564.50</div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 card-shadow mb-4">
+        <div class="text-sm font-semibold mb-3">By Category</div>
+        <div id="categoryChart" class="h-48 flex items-center justify-center text-gray-400 text-sm">[Chart.js coming in Phase 8]</div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 card-shadow">
+        <div class="text-sm font-semibold mb-3">Daily Trend</div>
+        <div id="trendChart" class="h-40 flex items-center justify-center text-gray-400 text-sm">[Chart.js coming in Phase 8]</div>
+      </div>
+    </div>
+
+    <!-- HISTORY PAGE -->
+    <div id="historyPage" class="page p-4">
+      <h2 class="text-xl font-bold mb-4">📝 History</h2>
+      <div class="relative mb-4">
+        <input type="text" id="historySearch" placeholder="Search..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:outline-none" oninput="searchHistory()">
+        <span class="absolute left-3 top-3.5 text-gray-400">🔍</span>
+      </div>
+      <div id="historyList" class="space-y-4"></div>
+    </div>
+
+    <!-- SETTINGS PAGE -->
+    <div id="settingsPage" class="page p-4">
+      <h2 class="text-xl font-bold mb-4">⚙️ Settings</h2>
+      <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+        <div class="p-4 border-b border-gray-100">
+          <div class="text-sm text-gray-500 mb-1">Current User</div>
+          <div class="font-semibold" id="settingsUserName">Marie</div>
+          <div class="text-xs text-gray-400" id="settingsUserRole">Helper Account</div>
+        </div>
+        <div class="p-4 border-b border-gray-100 flex items-center justify-between">
+          <span>Low Balance Alert</span>
+          <span class="text-primary font-medium">$50</span>
+        </div>
+        <div class="p-4 flex items-center justify-between">
+          <span>Currency</span>
+          <span class="text-primary font-medium">HKD ($)</span>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4">
+        <button onclick="exportData()" class="w-full p-4 text-left border-b border-gray-100 btn-press flex items-center justify-between">
+          <span>📥 Export All Data</span><span class="text-gray-400">→</span>
+        </button>
+        <button onclick="importData()" class="w-full p-4 text-left border-b border-gray-100 btn-press flex items-center justify-between">
+          <span>📤 Import Data</span><span class="text-gray-400">→</span>
+        </button>
+        <button onclick="clearAllData()" class="w-full p-4 text-left text-red-600 btn-press flex items-center justify-between">
+          <span>🗑️ Clear All Data</span><span class="text-gray-400">→</span>
+        </button>
+      </div>
+      <div class="bg-white rounded-2xl card-shadow overflow-hidden mb-4" id="employerOnlySettings" style="display:none;">
+        <div class="p-3 bg-blue-50 text-xs font-medium text-blue-700">Employer Settings</div>
+        <button onclick="configDrive()" class="w-full p-4 text-left border-b border-gray-100 btn-press flex items-center justify-between">
+          <span>☁️ Google Drive Setup</span><span class="text-gray-400">→</span>
+        </button>
+        <button onclick="configGemini()" class="w-full p-4 text-left border-b border-gray-100 btn-press flex items-center justify-between">
+          <span>🤖 Gemini API Key</span><span class="text-gray-400">→</span>
+        </button>
+        <button onclick="showPage('dashboard')" class="w-full p-4 text-left btn-press flex items-center justify-between">
+          <span>📊 Open Dashboard</span><span class="text-gray-400">→</span>
+        </button>
+      </div>
+      <button onclick="logout()" class="w-full bg-red-50 text-red-600 font-semibold py-4 rounded-xl btn-press">🚪 Logout</button>
+      <div class="text-center text-xs text-gray-400 mt-6">Family Food Log Hub v4.3.1<br>Made with ❤️ for Marie</div>
+    </div>
+
+    <!-- DASHBOARD PAGE -->
+    <div id="dashboardPage" class="page p-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">📊 Dashboard</h2>
+        <button onclick="showPage('settings')" class="text-sm text-gray-500">← Back</button>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mb-4">
+        <div class="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-4 text-white">
+          <div class="text-xs opacity-80 mb-1">Month Total</div>
+          <div class="text-2xl font-bold">$4,280.50</div>
+        </div>
+        <div class="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-4 text-white">
+          <div class="text-xs opacity-80 mb-1">Cash Balance</div>
+          <div class="text-2xl font-bold">$383.60</div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 card-shadow mb-4">
+        <div class="text-sm font-semibold mb-2">⚠️ Alerts</div>
+        <div class="text-sm text-yellow-700 bg-yellow-50 p-3 rounded-lg mb-2">Single day expense > $500 on Jul 20</div>
+        <div class="text-sm text-red-700 bg-red-50 p-3 rounded-lg">No records for 2 days (Jul 18-19)</div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 card-shadow mb-4">
+        <div class="text-sm font-semibold mb-2">Recent Transactions</div>
+        <div class="space-y-2 text-sm">
+          <div class="flex justify-between"><span>🍎 Apple</span><span class="font-medium">$35.00</span></div>
+          <div class="flex justify-between"><span>🚌 MTR YL-TST</span><span class="font-medium">$25.00</span></div>
+          <div class="flex justify-between"><span>🥩 Pork</span><span class="font-medium">$80.00</span></div>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl p-4 card-shadow mb-4">
+        <div class="text-sm font-semibold mb-2">🍳 Recent Cooked</div>
+        <div class="flex gap-2 overflow-x-auto no-scrollbar">
+          <div class="flex-shrink-0 w-20 text-center">
+            <div class="w-16 h-16 bg-gray-200 rounded-xl mx-auto mb-1 flex items-center justify-center text-2xl">🥡</div>
+            <div class="text-xs">Sweet & Sour</div>
+          </div>
+          <div class="flex-shrink-0 w-20 text-center">
+            <div class="w-16 h-16 bg-gray-200 rounded-xl mx-auto mb-1 flex items-center justify-center text-2xl">🍜</div>
+            <div class="text-xs">Tomato Egg</div>
+          </div>
+        </div>
+      </div>
+      <div class="flex gap-3">
+        <button onclick="exportCSV()" class="flex-1 bg-primary text-white py-3 rounded-xl font-medium btn-press">📄 Export CSV</button>
+        <button onclick="backupData()" class="flex-1 bg-secondary text-white py-3 rounded-xl font-medium btn-press">💾 Backup</button>
+      </div>
+    </div>
+
+    <!-- MEAL PLANNER PAGE -->
+    <div id="mealPlannerPage" class="page p-4">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-bold">🗓️ Meal Planner</h2>
+        <div class="flex gap-2">
+          <button class="text-xs bg-primary text-white px-3 py-1.5 rounded-full">This Week</button>
+          <button class="text-xs bg-gray-100 px-3 py-1.5 rounded-full">Next Week</button>
+        </div>
+      </div>
+      <div id="mealPlanCalendar" class="space-y-3">
+        <div class="bg-white rounded-2xl p-4 card-shadow">
+          <div class="font-semibold text-sm mb-2">Mon 22/7</div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm"><span class="text-gray-500">🌅 Breakfast</span><button class="text-primary text-xs">＋</button></div>
+            <div class="flex items-center justify-between text-sm"><span class="text-gray-500">🌞 Lunch</span><button class="text-primary text-xs">＋</button></div>
+            <div class="flex items-center justify-between text-sm bg-orange-50 p-2 rounded-lg">
+              <span>🌙 Dinner: 🍳 糖醋排骨</span>
+              <div class="flex gap-1"><button class="text-xs">👁️</button><button class="text-xs">🗑️</button></div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 card-shadow">
+          <div class="font-semibold text-sm mb-2">Tue 23/7</div>
+          <div class="space-y-2">
+            <div class="flex items-center justify-between text-sm"><span class="text-gray-500">🌅 Breakfast</span><button class="text-primary text-xs">＋</button></div>
+            <div class="flex items-center justify-between text-sm"><span class="text-gray-500">🌞 Lunch</span><button class="text-primary text-xs">＋</button></div>
+            <div class="flex items-center justify-between text-sm bg-orange-50 p-2 rounded-lg">
+              <span>🌙 Dinner: 🍜 番茄炒蛋</span>
+              <div class="flex gap-1"><button class="text-xs">👁️</button><button class="text-xs">🗑️</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button onclick="generateShoppingFromPlan()" class="w-full mt-4 bg-primary text-white py-4 rounded-xl font-semibold btn-press shadow-lg shadow-orange-200">
+        🛒 Generate Shopping List for Week
+      </button>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav pb-safe">
+      <div class="flex justify-around items-center h-16">
+        <button onclick="showPage('home')" class="nav-item flex flex-col items-center justify-center flex-1 h-full active" data-page="home">
+          <span class="text-xl">🏠</span><span class="text-[10px] mt-0.5 font-medium">Home</span>
+        </button>
+        <button onclick="showPage('shopping')" class="nav-item flex flex-col items-center justify-center flex-1 h-full" data-page="shopping">
+          <span class="text-xl">🛒</span><span class="text-[10px] mt-0.5 font-medium">Shopping</span>
+        </button>
+        <button onclick="showPage('cooking')" class="nav-item flex flex-col items-center justify-center flex-1 h-full" data-page="cooking">
+          <span class="text-xl">🍳</span><span class="text-[10px] mt-0.5 font-medium">Cooking</span>
+        </button>
+        <button onclick="showPage('report')" class="nav-item flex flex-col items-center justify-center flex-1 h-full" data-page="report">
+          <span class="text-xl">📊</span><span class="text-[10px] mt-0.5 font-medium">Report</span>
+        </button>
+        <button onclick="showPage('history')" class="nav-item flex flex-col items-center justify-center flex-1 h-full" data-page="history">
+          <span class="text-xl">📝</span><span class="text-[10px] mt-0.5 font-medium">History</span>
+        </button>
+        <button onclick="showPage('settings')" class="nav-item flex flex-col items-center justify-center flex-1 h-full" data-page="settings">
+          <span class="text-xl">⚙️</span><span class="text-[10px] mt-0.5 font-medium">Settings</span>
+        </button>
+      </div>
+    </nav>
+  </div>
+
+  <!-- ========== MODALS ========== -->
+
+  <div id="cashOutModal" class="modal">
+    <div class="modal-content p-6 slide-up">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">💵 Cash Out</h3>
+        <button onclick="closeModal('cashOutModal')" class="text-gray-400 text-xl">✕</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Category</label>
+          <div class="grid grid-cols-3 gap-2" id="cashOutCategories"></div>
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Item</label>
+          <input type="text" id="cashOutItem" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none" placeholder="What did you buy?">
+          <div id="itemSuggestions" class="hidden mt-2 max-h-32 overflow-y-auto bg-gray-50 rounded-lg"></div>
+        </div>
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Amount (HKD)</label>
+          <input type="number" id="cashOutAmount" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none amount-input" placeholder="0.00">
+        </div>
+        <button onclick="saveCashOut()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="transportModal" class="modal">
+    <div class="modal-content p-6 slide-up">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">🚌 Transport</h3>
+        <button onclick="closeModal('transportModal')" class="text-gray-400 text-xl">✕</button>
+      </div>
+      <div class="space-y-4">
+        <div>
+          <label class="text-sm text-gray-600 mb-1 block">Select from History</label>
+          <div id="transportHistory" class="space-y-2 max-h-40 overflow-y-auto"></div>
+        </div>
+        <div class="text-center text-gray-400 text-sm">— or enter manually —</div>
+        <div class="grid grid-cols-4 gap-2">
+          <button onclick="setTransportType('mtr')" class="transport-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press" data-type="mtr">MTR</button>
+          <button onclick="setTransportType('bus')" class="transport-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press selected" data-type="bus">Bus</button>
+          <button onclick="setTransportType('minibus')" class="transport-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press" data-type="minibus">Minibus</button>
+          <button onclick="setTransportType('ferry')" class="transport-type-btn p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press" data-type="ferry">Ferry</button>
+        </div>
+        <input type="text" id="transportRoute" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none" placeholder="Route / From">
+        <input type="text" id="transportTo" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none hidden" placeholder="To (MTR only)">
+        <input type="number" id="transportAmount" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none amount-input" placeholder="0.00">
+        <button onclick="saveTransport()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save & Add to History</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="topUpModal" class="modal">
+    <div class="modal-content p-6 slide-up">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">➕ Octopus Top-up</h3>
+        <button onclick="closeModal('topUpModal')" class="text-gray-400 text-xl">✕</button>
+      </div>
+      <div class="space-y-4">
+        <div class="grid grid-cols-3 gap-2">
+          <button onclick="setTopUpLocation('7-11')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press selected">7-11</button>
+          <button onclick="setTopUpLocation('mtr')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press">MTR Station</button>
+          <button onclick="setTopUpLocation('other')" class="topup-loc p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press">Other</button>
+        </div>
+        <input type="number" id="topUpAmount" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none amount-input" placeholder="0.00">
+        <button onclick="saveTopUp()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="cashInModal" class="modal">
+    <div class="modal-content p-6 slide-up">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-bold">💰 Cash In</h3>
+        <button onclick="closeModal('cashInModal')" class="text-gray-400 text-xl">✕</button>
+      </div>
+      <div class="space-y-4">
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="setCashInSource('employer')" class="cashin-src p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press selected">From Employer</button>
+          <button onclick="setCashInSource('other')" class="cashin-src p-2 rounded-lg border-2 border-gray-200 text-center text-sm btn-press">Other</button>
+        </div>
+        <input type="number" id="cashInAmount" class="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-primary focus:outline-none amount-input" placeholder="0.00">
+        <button onclick="saveCashIn()" class="w-full bg-primary text-white font-semibold py-3 rounded-xl btn-press">💾 Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="fixed top-4 left-4 right-4 bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg transform -translate-y-20 transition-transform duration-300 z-[200] flex items-center gap-2">
+    <span id="toastIcon">✅</span>
+    <span id="toastMessage">Saved!</span>
+  </div>
+
+  <script>
+
+    // ========== DATA STORE ==========
+    const DB = {
+      auth: {
+        currentUser: null,
+        users: [
+          { role: 'marie', name: 'Marie', password: '51209289', permissions: ['expense','shopping','cooking','voice','camera','ingredient_check'] },
+          { role: 'employer', name: 'Madam or Sir', password: '20180203', permissions: ['all','dashboard','backup','settings','export','drive_config','meal_planner'] }
+        ]
+      },
+      octopusBalance: 335.40,
+      cashBalance: 383.60,
+      transactions: [
+        { id: 't1', date: '2026-07-22T14:30:00', type: 'cash_out', category: 'fruit', item: 'Apple', amount: 35.00, payment: 'cash', store: 'Wet Market' },
+        { id: 't2', date: '2026-07-22T12:00:00', type: 'cash_out', category: 'meat', item: 'Pork Mince', amount: 20.00, payment: 'cash', store: 'Wet Market' },
+        { id: 't3', date: '2026-07-22T08:30:00', type: 'transport', category: 'transport', item: '268M Bus', amount: 10.10, payment: 'octopus', store: '' },
+        { id: 't4', date: '2026-07-21T18:00:00', type: 'cash_out', category: 'grocery', item: 'Rice', amount: 45.00, payment: 'cash', store: '759 Store' },
+        { id: 't5', date: '2026-07-21T09:00:00', type: 'transport', category: 'transport', item: 'MTR YL-TST', amount: 25.00, payment: 'octopus', store: '' }
+      ],
+      transportHistory: [
+        { id: 'th1', type: 'bus', route: '268M', from: '', to: '', amount: 10.1, useCount: 5, lastUsed: '2026-07-22T08:30:00' },
+        { id: 'th2', type: 'mtr', route: '', from: 'Yuen Long', to: 'Tsim Sha Tsui', amount: 25.0, useCount: 12, lastUsed: '2026-07-22T18:00:00' },
+        { id: 'th3', type: 'mtr', route: '', from: 'Central', to: 'Causeway Bay', amount: 14.5, useCount: 3, lastUsed: '2026-07-20T18:00:00' },
+        { id: 'th4', type: 'bus', route: '970', from: '', to: '', amount: 12.1, useCount: 2, lastUsed: '2026-07-19T08:00:00' }
+      ],
+      shoppingItemHistory: [
+        { item: 'Pork Mince', category: 'meat', lastAmount: 20.0, useCount: 8, lastUsed: '2026-07-21T17:00:00' },
+        { item: 'Apple', category: 'fruit', lastAmount: 35.0, useCount: 15, lastUsed: '2026-07-22T09:00:00' },
+        { item: 'Rice', category: 'grocery', lastAmount: 45.0, useCount: 6, lastUsed: '2026-07-21T09:00:00' }
+      ],
+      categories: {
+        fruit: { icon: '🍎', items: ['Apple','Pears','Banana','Orange','Grapes'] },
+        vegetable: { icon: '🥬', items: ['Bell Pepper','Carrots','Mushroom','Corn','Cucumber','Eggplant'] },
+        meat: { icon: '🥩', items: ['Pork','Beef','Chicken','Minced Pork'] },
+        fish: { icon: '🐟', items: ['Salmon','Threadfin','Grass Carp'] },
+        grocery: { icon: '🍚', items: ['Rice','Oil','Salt','Sugar','Soy Sauce'] },
+        other: { icon: '📦', items: ['Household','Baby','Personal Care'] }
+      },
+      templates: [],
+      settings: { language: 'en', currency: 'HKD', lowBalanceAlert: 50, voiceRetentionDays: 3 }
+    };
+
+    let currentUser = null;
+    let selectedUserRole = null;
+    let currentTransportType = 'bus';
+    let currentTopUpLocation = '7-11';
+    let currentCashInSource = 'employer';
+    let selectedCashOutCategory = null;
+
+    // ========== INIT ==========
+    document.addEventListener('DOMContentLoaded', () => {
+      loadFromStorage();
+      checkAutoLogin();
+      initServiceWorker();
+    });
+
+    function initServiceWorker() {
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('sw.js').catch(() => {});
+      }
+    }
+
+    // ========== STORAGE ==========
+    function saveToStorage() {
+      localStorage.setItem('foodLogData', JSON.stringify({
+        auth: DB.auth,
+        octopusBalance: DB.octopusBalance,
+        cashBalance: DB.cashBalance,
+        transactions: DB.transactions,
+        transportHistory: DB.transportHistory,
+        shoppingItemHistory: DB.shoppingItemHistory,
+        templates: DB.templates,
+        settings: DB.settings
+      }));
+    }
+
+    function loadFromStorage() {
+      const saved = localStorage.getItem('foodLogData');
+      if (saved) {
+        const data = JSON.parse(saved);
+        Object.assign(DB, data);
+      }
+    }
+
+    // ========== LOGIN SYSTEM ==========
+    function selectUser(role) {
+      selectedUserRole = role;
+      document.querySelectorAll('.user-select').forEach(el => {
+        el.classList.remove('selected');
+        el.querySelector('.check-dot').classList.add('hidden');
+        el.querySelector('.check-circle').classList.remove('border-primary');
+      });
+      const selected = document.getElementById('select' + (role === 'marie' ? 'Marie' : 'Employer'));
+      selected.classList.add('selected');
+      selected.querySelector('.check-dot').classList.remove('hidden');
+      selected.querySelector('.check-circle').classList.add('border-primary');
+    }
+
+    function login() {
+      const password = document.getElementById('passwordInput').value;
+      const rememberMe = document.getElementById('rememberMe').checked;
+      const errorEl = document.getElementById('loginError');
+
+      if (!selectedUserRole) {
+        errorEl.textContent = 'Please select a user.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      const user = DB.auth.users.find(u => u.role === selectedUserRole);
+      if (!user || user.password !== password) {
+        errorEl.textContent = 'Wrong password. Please try again.';
+        errorEl.classList.remove('hidden');
+        return;
+      }
+
+      errorEl.classList.add('hidden');
+      currentUser = { ...user, rememberMe };
+      DB.auth.currentUser = currentUser;
+
+      if (rememberMe) {
+        localStorage.setItem('foodLogRemember', JSON.stringify({ role: user.role, token: btoa(password) }));
+      }
+
+      saveToStorage();
+      enterApp();
+    }
+
+    function checkAutoLogin() {
+      const remembered = localStorage.getItem('foodLogRemember');
+      if (remembered) {
+        const { role, token } = JSON.parse(remembered);
+        const user = DB.auth.users.find(u => u.role === role);
+        if (user && btoa(user.password) === token) {
+          document.getElementById('autoLoginHint').classList.remove('hidden');
+          setTimeout(() => {
+            currentUser = { ...user, rememberMe: true };
+            DB.auth.currentUser = currentUser;
+            enterApp();
+          }, 800);
+        }
+      }
+    }
+
+    function enterApp() {
+      document.getElementById('loginPage').classList.remove('active');
+      document.getElementById('appContainer').classList.remove('hidden');
+
+      document.getElementById('userNameDisplay').textContent = currentUser.name + '! 👋';
+      document.getElementById('greetingText').textContent = getGreeting();
+      document.getElementById('settingsUserName').textContent = currentUser.name;
+      document.getElementById('settingsUserRole').textContent = currentUser.role === 'marie' ? 'Helper Account' : 'Employer Account';
+
+      if (currentUser.role === 'employer') {
+        document.getElementById('employerOnlySettings').style.display = 'block';
+      }
+
+      updateBalances();
+      renderRecentTransactions();
+      renderQuickTemplates();
+      renderTransportHistory();
+      renderHistory();
+      showPage('home');
+    }
+
+    function getGreeting() {
+      const hour = new Date().getHours();
+      if (hour < 12) return 'Good morning';
+      if (hour < 18) return 'Good afternoon';
+      return 'Good evening';
+    }
+
+    function logout() {
+      localStorage.removeItem('foodLogRemember');
+      currentUser = null;
+      DB.auth.currentUser = null;
+      saveToStorage();
+      location.reload();
+    }
+
+    // ========== NAVIGATION ==========
+    function showPage(pageName) {
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById(pageName + 'Page').classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      const navBtn = document.querySelector(`[data-page="${pageName}"]`);
+      if (navBtn) navBtn.classList.add('active');
+      window.scrollTo(0, 0);
+    }
+
+    // ========== BALANCE ==========
+    function updateBalances() {
+      document.getElementById('octopusBalance').textContent = '$' + DB.octopusBalance.toFixed(2);
+      document.getElementById('cashBalance').textContent = '$' + DB.cashBalance.toFixed(2);
+      const alertEl = document.getElementById('lowBalanceAlert');
+      if (DB.octopusBalance < DB.settings.lowBalanceAlert) {
+        alertEl.classList.remove('hidden');
+      } else {
+        alertEl.classList.add('hidden');
+      }
+    }
+
+    // ========== RECENT TRANSACTIONS ==========
+    function renderRecentTransactions() {
+      const container = document.getElementById('recentTransactions');
+      const recent = DB.transactions.slice(0, 5);
+      container.innerHTML = recent.map(t => `
+        <div class="bg-white rounded-xl p-3 card-shadow flex items-center gap-3 btn-press" onclick="viewTransaction('${t.id}')">
+          <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg">${getCategoryIcon(t.category)}</div>
+          <div class="flex-1 min-w-0">
+            <div class="font-medium text-sm truncate">${t.item}</div>
+            <div class="text-xs text-gray-500">${formatDate(t.date)} • ${t.store || t.payment}</div>
+          </div>
+          <div class="font-bold text-sm ${t.type === 'cash_in' || t.type === 'top_up' ? 'text-green-600' : 'text-gray-900'}">
+            ${t.type === 'cash_in' || t.type === 'top_up' ? '+' : '-'}$${t.amount.toFixed(2)}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function getCategoryIcon(cat) {
+      const icons = { fruit: '🍎', vegetable: '🥬', meat: '🥩', fish: '🐟', grocery: '🍚', transport: '🚌', other: '📦' };
+      return icons[cat] || '📦';
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr);
+      const today = new Date();
+      const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+      if (d.toDateString() === today.toDateString()) return 'Today ' + d.toLocaleTimeString('en', { hour: '2-digit', minute: '2-digit' });
+      if (d.toDateString() === yesterday.toDateString()) return 'Yesterday';
+      return d.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+    }
+
+    // ========== QUICK TEMPLATES ==========
+    function renderQuickTemplates() {
+      const container = document.getElementById('quickTemplates');
+      const templates = [
+        { category: 'fruit', item: 'Apple', amount: 35 },
+        { category: 'meat', item: 'Pork Mince', amount: 20 },
+        { category: 'grocery', item: 'Rice', amount: 45 },
+        { category: 'transport', item: '268M Bus', amount: 10.1 },
+        { category: 'transport', item: 'MTR YL-TST', amount: 25 }
+      ];
+      container.innerHTML = templates.map(t => `
+        <button onclick="useTemplate('${t.category}', '${t.item}', ${t.amount})" class="flex-shrink-0 bg-white rounded-xl px-4 py-2 card-shadow btn-press text-sm">
+          <div class="text-center">${getCategoryIcon(t.category)}</div>
+          <div class="font-medium text-xs mt-1">${t.item}</div>
+          <div class="text-xs text-gray-500">$${t.amount}</div>
+        </button>
+      `).join('');
+    }
+
+    function useTemplate(category, item, amount) {
+      openCashOut();
+      setTimeout(() => {
+        document.getElementById('cashOutItem').value = item;
+        document.getElementById('cashOutAmount').value = amount;
+      }, 100);
+    }
+
+    // ========== MODAL HELPERS ==========
+    function openModal(id) { document.getElementById(id).classList.add('active'); }
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+    // ========== CASH OUT ==========
+    function openCashOut() {
+      if (!currentUser.permissions.includes('expense') && currentUser.role !== 'employer') {
+        showToast('❌', 'No permission'); return;
+      }
+      renderCashOutCategories();
+      openModal('cashOutModal');
+    }
+
+    function renderCashOutCategories() {
+      const container = document.getElementById('cashOutCategories');
+      container.innerHTML = Object.entries(DB.categories).map(([key, val]) => `
+        <button onclick="selectCashOutCategory('${key}')" class="category-btn p-2 rounded-lg border-2 border-gray-200 text-center btn-press" data-cat="${key}">
+          <div class="text-xl">${val.icon}</div>
+          <div class="text-xs mt-1 capitalize">${key}</div>
+        </button>
+      `).join('');
+    }
+
+    function selectCashOutCategory(cat) {
+      selectedCashOutCategory = cat;
+      document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.classList.toggle('border-primary', btn.dataset.cat === cat);
+        btn.classList.toggle('bg-orange-50', btn.dataset.cat === cat);
+      });
+      const suggestions = DB.categories[cat].items;
+      const sugEl = document.getElementById('itemSuggestions');
+      sugEl.innerHTML = suggestions.map(item => `
+        <div class="p-2 hover:bg-gray-100 cursor-pointer text-sm" onclick="document.getElementById('cashOutItem').value='${item}'">${item}</div>
+      `).join('');
+      sugEl.classList.remove('hidden');
+    }
+
+    function saveCashOut() {
+      const item = document.getElementById('cashOutItem').value;
+      const amount = parseFloat(document.getElementById('cashOutAmount').value);
+      if (!selectedCashOutCategory || !item || !amount) {
+        showToast('⚠️', 'Please fill all fields'); return;
+      }
+      const tx = {
+        id: 't' + Date.now(), date: new Date().toISOString(), type: 'cash_out',
+        category: selectedCashOutCategory, item: item, amount: amount,
+        payment: 'cash', store: ''
+      };
+      DB.transactions.unshift(tx);
+      DB.cashBalance -= amount;
+      updateShoppingHistory(item, selectedCashOutCategory, amount);
+      saveToStorage();
+      updateBalances();
+      renderRecentTransactions();
+      renderHistory();
+      closeModal('cashOutModal');
+      showToast('✅', `Saved: ${item} -$${amount.toFixed(2)}`);
+      document.getElementById('cashOutItem').value = '';
+      document.getElementById('cashOutAmount').value = '';
+      selectedCashOutCategory = null;
+    }
+
+    function updateShoppingHistory(item, category, amount) {
+      const existing = DB.shoppingItemHistory.find(h => h.item === item);
+      if (existing) {
+        existing.lastAmount = amount; existing.useCount++; existing.lastUsed = new Date().toISOString();
+      } else {
+        DB.shoppingItemHistory.push({ item, category, lastAmount: amount, useCount: 1, lastUsed: new Date().toISOString() });
+      }
+    }
+
+    // ========== TRANSPORT ==========
+    function openTransport() {
+      renderTransportHistory();
+      openModal('transportModal');
+    }
+
+    function renderTransportHistory() {
+      const container = document.getElementById('transportHistory');
+      const sorted = [...DB.transportHistory].sort((a, b) => b.useCount - a.useCount);
+      container.innerHTML = sorted.map(h => `
+        <div class="p-3 bg-gray-50 rounded-lg cursor-pointer btn-press" onclick="useTransportHistory('${h.id}')">
+          <div class="flex items-center justify-between">
+            <div class="text-sm font-medium">${h.type === 'mtr' ? `MTR ${h.from}-${h.to}` : `${h.type} ${h.route}`}</div>
+            <div class="text-sm font-bold">$${h.amount.toFixed(1)}</div>
+          </div>
+          <div class="text-xs text-gray-500">Used ${h.useCount}x • Last: ${formatDate(h.lastUsed)}</div>
+        </div>
+      `).join('');
+    }
+
+    function useTransportHistory(id) {
+      const h = DB.transportHistory.find(t => t.id === id);
+      if (!h) return;
+      document.getElementById('transportRoute').value = h.type === 'mtr' ? h.from : h.route;
+      document.getElementById('transportTo').value = h.to || '';
+      document.getElementById('transportAmount').value = h.amount;
+      setTransportType(h.type);
+    }
+
+    function setTransportType(type) {
+      currentTransportType = type;
+      document.querySelectorAll('.transport-type-btn').forEach(btn => {
+        btn.classList.toggle('border-primary', btn.dataset.type === type);
+        btn.classList.toggle('bg-orange-50', btn.dataset.type === type);
+      });
+      document.getElementById('transportTo').classList.toggle('hidden', type !== 'mtr');
+    }
+
+    function saveTransport() {
+      const route = document.getElementById('transportRoute').value;
+      const to = document.getElementById('transportTo').value;
+      const amount = parseFloat(document.getElementById('transportAmount').value);
+      if (!route || !amount) { showToast('⚠️', 'Please fill route and amount'); return; }
+      const itemName = currentTransportType === 'mtr' ? `MTR ${route}-${to}` : `${currentTransportType} ${route}`;
+      const tx = {
+        id: 't' + Date.now(), date: new Date().toISOString(), type: 'transport',
+        category: 'transport', item: itemName, amount: amount, payment: 'octopus', store: ''
+      };
+      DB.transactions.unshift(tx);
+      DB.octopusBalance -= amount;
+      const existing = DB.transportHistory.find(h => 
+        h.type === currentTransportType && 
+        (currentTransportType === 'mtr' ? (h.from === route && h.to === to) : h.route === route)
+      );
+      if (existing) { existing.useCount++; existing.lastUsed = new Date().toISOString(); }
+      else {
+        DB.transportHistory.push({
+          id: 'th' + Date.now(), type: currentTransportType,
+          route: currentTransportType !== 'mtr' ? route : '',
+          from: currentTransportType === 'mtr' ? route : '',
+          to: currentTransportType === 'mtr' ? to : '',
+          amount: amount, useCount: 1, lastUsed: new Date().toISOString()
+        });
+      }
+      saveToStorage();
+      updateBalances();
+      renderRecentTransactions();
+      renderTransportHistory();
+      renderHistory();
+      closeModal('transportModal');
+      showToast('✅', `Transport saved: -$${amount.toFixed(2)}`);
+    }
+
+    // ========== TOP UP ==========
+    function openTopUp() {
+      openModal('topUpModal');
+    }
+
+    function setTopUpLocation(loc) {
+      currentTopUpLocation = loc;
+      document.querySelectorAll('.topup-loc').forEach(btn => {
+        const isSelected = (loc === '7-11' && btn.textContent.includes('7-11')) ||
+                          (loc === 'mtr' && btn.textContent.includes('MTR')) ||
+                          (loc === 'other' && btn.textContent.includes('Other'));
+        btn.classList.toggle('border-primary', isSelected);
+        btn.classList.toggle('bg-orange-50', isSelected);
+      });
+    }
+
+    function saveTopUp() {
+      const amount = parseFloat(document.getElementById('topUpAmount').value);
+      if (!amount) { showToast('⚠️', 'Please enter amount'); return; }
+      const tx = {
+        id: 't' + Date.now(), date: new Date().toISOString(), type: 'top_up',
+        category: 'other', item: `Top-up @ ${currentTopUpLocation}`, amount: amount,
+        payment: 'cash', store: currentTopUpLocation
+      };
+      DB.transactions.unshift(tx);
+      DB.octopusBalance += amount;
+      DB.cashBalance -= amount;
+      saveToStorage();
+      updateBalances();
+      renderRecentTransactions();
+      renderHistory();
+      closeModal('topUpModal');
+      showToast('✅', `Top-up: +$${amount.toFixed(2)} to Octopus`);
+    }
+
+    // ========== CASH IN ==========
+    function openCashIn() {
+      openModal('cashInModal');
+    }
+
+    function setCashInSource(src) {
+      currentCashInSource = src;
+      document.querySelectorAll('.cashin-src').forEach(btn => {
+        const isSelected = (src === 'employer' && btn.textContent.includes('Employer')) ||
+                          (src === 'other' && btn.textContent.includes('Other'));
+        btn.classList.toggle('border-primary', isSelected);
+        btn.classList.toggle('bg-orange-50', isSelected);
+      });
+    }
+
+    function saveCashIn() {
+      const amount = parseFloat(document.getElementById('cashInAmount').value);
+      if (!amount) { showToast('⚠️', 'Please enter amount'); return; }
+      const tx = {
+        id: 't' + Date.now(), date: new Date().toISOString(), type: 'cash_in',
+        category: 'other', item: `Cash from ${currentCashInSource === 'employer' ? 'Employer' : 'Other'}`,
+        amount: amount, payment: 'cash', store: ''
+      };
+      DB.transactions.unshift(tx);
+      DB.cashBalance += amount;
+      saveToStorage();
+      updateBalances();
+      renderRecentTransactions();
+      renderHistory();
+      closeModal('cashInModal');
+      showToast('✅', `Cash in: +$${amount.toFixed(2)}`);
+    }
+
+    // ========== HISTORY ==========
+    function renderHistory() {
+      const container = document.getElementById('historyList');
+      const grouped = groupByDate(DB.transactions);
+      container.innerHTML = Object.entries(grouped).map(([date, txs]) => `
+        <div>
+          <div class="text-xs font-semibold text-gray-500 mb-2 uppercase tracking-wide">${date}</div>
+          <div class="space-y-2">
+            ${txs.map(t => `
+              <div class="bg-white rounded-xl p-3 card-shadow flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg">${getCategoryIcon(t.category)}</div>
+                <div class="flex-1 min-w-0">
+                  <div class="font-medium text-sm truncate">${t.item}</div>
+                  <div class="text-xs text-gray-500">${t.payment} ${t.store ? '• ' + t.store : ''}</div>
+                </div>
+                <div class="font-bold text-sm ${t.type === 'cash_in' || t.type === 'top_up' ? 'text-green-600' : 'text-gray-900'}">
+                  ${t.type === 'cash_in' || t.type === 'top_up' ? '+' : '-'}$${t.amount.toFixed(2)}
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function groupByDate(transactions) {
+      const groups = {};
+      transactions.forEach(t => {
+        const date = new Date(t.date);
+        const today = new Date();
+        const yesterday = new Date(today); yesterday.setDate(yesterday.getDate() - 1);
+        let key;
+        if (date.toDateString() === today.toDateString()) key = 'Today';
+        else if (date.toDateString() === yesterday.toDateString()) key = 'Yesterday';
+        else key = date.toLocaleDateString('en', { weekday: 'long', month: 'short', day: 'numeric' });
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(t);
+      });
+      return groups;
+    }
+
+    function searchHistory() {
+      const query = document.getElementById('historySearch').value.toLowerCase();
+      if (!query) { renderHistory(); return; }
+      const filtered = DB.transactions.filter(t => 
+        t.item.toLowerCase().includes(query) || (t.store && t.store.toLowerCase().includes(query))
+      );
+      const container = document.getElementById('historyList');
+      container.innerHTML = `
+        <div class="text-xs font-semibold text-gray-500 mb-2">Search Results (${filtered.length})</div>
+        <div class="space-y-2">
+          ${filtered.map(t => `
+            <div class="bg-white rounded-xl p-3 card-shadow flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-lg">${getCategoryIcon(t.category)}</div>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium text-sm truncate">${t.item}</div>
+                <div class="text-xs text-gray-500">${formatDate(t.date)}</div>
+              </div>
+              <div class="font-bold text-sm ${t.type === 'cash_in' || t.type === 'top_up' ? 'text-green-600' : 'text-gray-900'}">
+                ${t.type === 'cash_in' || t.type === 'top_up' ? '+' : '-'}$${t.amount.toFixed(2)}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    // ========== TOAST ==========
+    function showToast(icon, message) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toastIcon').textContent = icon;
+      document.getElementById('toastMessage').textContent = message;
+      toast.classList.remove('-translate-y-20');
+      setTimeout(() => toast.classList.add('-translate-y-20'), 2500);
+    }
+
+    // ========== PLACEHOLDERS ==========
+    function openScan() { showToast('📷', 'Scan Receipt - Coming in Phase 6'); }
+    function openVoice() { showToast('🎤', 'Voice Entry - Coming in Phase 2'); }
+    function openCamera() { showToast('📷', 'Camera ID - Coming in Phase 6'); }
+    function createNewList() { showToast('🛒', 'Create List - Coming in Phase 4'); }
+    function openList(id) { showToast('🛒', 'Open List ' + id + ' - Coming in Phase 4'); }
+    function takePhotoDish() { showToast('📷', 'Photo Dish - Coming in Phase 5'); }
+    function sayDishName() { showToast('🎤', 'Say Dish - Coming in Phase 5'); }
+    function typeDishName() { showToast('⌨️', 'Type Dish - Coming in Phase 5'); }
+    function createOwnRecipe() { showToast('🎤', 'Own Recipe - Coming in Phase 5'); }
+    function viewRecipe(id) { showToast('🍳', 'View Recipe ' + id + ' - Coming in Phase 5'); }
+    function viewTodayRecipe() { showToast('🍳', 'View Today Recipe - Coming in Phase 6'); }
+    function markCooked() { showToast('✅', 'Mark Cooked - Coming in Phase 5'); }
+    function viewTransaction(id) { showToast('📝', 'View Transaction ' + id); }
+    function exportData() { showToast('📥', 'Export - Coming in Phase 9'); }
+    function importData() { showToast('📤', 'Import - Coming in Phase 9'); }
+    function clearAllData() { 
+      if (confirm('Clear ALL data? This cannot be undone!')) {
+        localStorage.removeItem('foodLogData');
+        location.reload();
+      }
+    }
+    function configDrive() { showToast('☁️', 'Drive Config - Coming in Phase 9'); }
+    function configGemini() { showToast('🤖', 'Gemini Config - Coming in Phase 9'); }
+    function exportCSV() { showToast('📄', 'Export CSV - Coming in Phase 8'); }
+    function backupData() { showToast('💾', 'Backup - Coming in Phase 9'); }
+    function generateShoppingFromPlan() { showToast('🛒', 'Generate List - Coming in Phase 6'); }
+    function showPageShoppingHistory() { showToast('📋', 'Shopping History - Coming in Phase 4'); }
+  </script>
+</body>
+</html>
