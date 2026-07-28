@@ -1,20 +1,33 @@
-// netlify/functions/ocr-proxy.js
+// netlify/functions/ocr-proxy.js (除錯版)
 exports.handler = async (event) => {
-  // 只接受 POST 請求
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
   try {
-    // 從前端接收圖片 Base64 同 Prompt
-    const { imageBase64, prompt, model } = JSON.parse(event.body);
+    // 除錯：列出所有以 QWEN 開頭嘅環境變數名
+    const allKeys = Object.keys(process.env);
+    const qwenKeys = allKeys.filter(k => k.toUpperCase().includes('QWEN'));
 
-    // 從 Netlify 環境變數讀取 API Key（安全，唔會暴露俾前端）
     const apiKey = process.env.QWEN_API_KEY;
+
     if (!apiKey) {
-      throw new Error('Missing QWEN_API_KEY environment variable');
+      return {
+        statusCode: 500,
+        headers: { 'Access-Control-Allow-Origin': '*' },
+        body: JSON.stringify({
+          error: 'Missing QWEN_API_KEY environment variable',
+          debug: {
+            qwenKeys: qwenKeys,                // 列出所有類似 QWEN 嘅變數名
+            totalEnvKeys: allKeys.length,      // 環境變數總數
+            hasExact: allKeys.includes('QWEN_API_KEY') // 是否剛好有呢個名
+          }
+        })
+      };
     }
 
+    // --- 正常 OCR 流程（如果 Key 存在）---
+    const { imageBase64, prompt, model } = JSON.parse(event.body);
     const aliyunUrl = 'https://ws-h7nywvwpakoov2in.ap-southeast-1.maas.aliyuncs.com/compatible-mode/v1/chat/completions';
 
     const response = await fetch(aliyunUrl, {
@@ -38,7 +51,6 @@ exports.handler = async (event) => {
     });
 
     const data = await response.json();
-
     return {
       statusCode: 200,
       headers: {
