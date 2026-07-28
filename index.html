@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Family Food Log Hub · OCR 測試</title>
+    <style>
+        * { box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #f5f0eb;
+            padding: 20px;
+            max-width: 720px;
+            margin: 0 auto;
+        }
+        .card {
+            background: white;
+            border-radius: 24px;
+            padding: 24px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+        }
+        h2 { color: #3D3D3D; margin-top: 0; }
+        label { font-weight: 600; display: block; margin: 12px 0 4px; }
+        .file-area {
+            border: 2px dashed #d9cdc4;
+            border-radius: 16px;
+            padding: 20px;
+            text-align: center;
+            background: #faf7f4;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .file-area:hover { border-color: #A8E6CF; background: #f5fcf9; }
+        #preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            margin: 10px 0;
+            display: none;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0d6cf;
+            border-radius: 16px;
+            font-size: 15px;
+            background: #fcfaf8;
+        }
+        input[type="text"]:focus {
+            border-color: #A8E6CF;
+            outline: none;
+            background: white;
+        }
+        button {
+            background: #A8E6CF;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 40px;
+            font-size: 18px;
+            font-weight: 700;
+            color: #2d5a4b;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 16px;
+            transition: 0.2s;
+        }
+        button:hover { background: #8fd9be; transform: scale(1.01); }
+        button:disabled { opacity: 0.5; pointer-events: none; }
+        .response-box {
+            background: #1e1e1e;
+            color: #e0e0e0;
+            border-radius: 16px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .success { background: #A8E6CF; color: #1e4a3b; }
+        .error { background: #FFB6C1; color: #7a2e3a; }
+        .info { background: #FFF5BA; color: #6b5f1a; }
+        .note {
+            background: #FFF8F0;
+            padding: 16px 20px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        .note code {
+            background: #eee;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>🍳 Family Food Log Hub</h2>
+        <p style="color:#666;">OCR 代理測試 — 透過 Netlify Functions 調用 QwenVL-OCR</p>
+    </div>
+
+    <div class="card">
+        <h3>🖼️ 1. 上傳收據圖片</h3>
+        <div class="file-area" id="dropZone">
+            <p>📤 點擊選擇圖片 或 拖曳到這裡</p>
+            <input type="file" id="imageInput" accept="image/*" style="display:none;" />
+        </div>
+        <img id="preview" alt="圖片預覽" />
+
+        <h3>📝 2. OCR 指令（可改）</h3>
+        <input type="text" id="promptInput" value="Extract balance, amount, store, date, items. Return JSON only." />
+
+        <button id="testBtn">🚀 3. 發送測試請求（經代理）</button>
+
+        <div id="status" style="margin:12px 0;"></div>
+
+        <h3>📥 4. API 回傳結果</h3>
+        <div class="response-box" id="responseBox">等待請求…</div>
+    </div>
+
+    <div class="card note">
+        <strong>📌 測試說明</strong>
+        <ul style="padding-left:20px; line-height:1.8;">
+            <li>✅ 此頁面呼叫 <code>/.netlify/functions/ocr-proxy</code></li>
+            <li>✅ API Key 已儲存於 Netlify 環境變數 <code>QWEN_API_KEY</code></li>
+            <li>✅ 如回傳 JSON 包含 <code>choices</code> → 成功</li>
+            <li>❌ 若出現 <code>Missing QWEN_API_KEY</code> → 環境變數未生效</li>
+            <li>❌ 若出現 <code>404</code> → Functions 未正確部署，檢查 <code>netlify.toml</code></li>
+        </ul>
+    </div>
+
+    <script>
+        (function() {
+            const dropZone = document.getElementById('dropZone');
+            const imageInput = document.getElementById('imageInput');
+            const preview = document.getElementById('preview');
+            const promptInput = document.getElementById('promptInput');
+            const testBtn = document.getElementById('testBtn');
+            const statusDiv = document.getElementById('status');
+            const responseBox = document.getElementById('responseBox');
+
+            let selectedFile = null;
+
+            // ---- 圖片上傳 ----
+            dropZone.addEventListener('click', () => imageInput.click());
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#A8E6CF';
+            });
+            dropZone.addEventListener('dragleave', () => {
+                dropZone.style.borderColor = '#d9cdc4';
+            });
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = '#d9cdc4';
+                if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+            });
+
+            imageInput.addEventListener('change', (e) => {
+                if (e.target.files.length) handleFile(e.target.files[0]);
+            });
+
+            function handleFile(file) {
+                if (!file.type.startsWith('image/')) {
+                    alert('請選擇圖片檔案');
+                    return;
+                }
+                selectedFile = file;
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    preview.src = ev.target.result;
+                    preview.style.display = 'block';
+                    dropZone.innerHTML = `<p>✅ 已選擇：${file.name} (${(file.size/1024).toFixed(1)} KB)</p>`;
+                };
+                reader.readAsDataURL(file);
+            }
+
+            // ---- 測試按鈕 ----
+            testBtn.addEventListener('click', async () => {
+                if (!selectedFile) {
+                    statusDiv.innerHTML = '<span class="badge error">❌ 請先上傳一張圖片</span>';
+                    return;
+                }
+
+                const prompt = promptInput.value.trim() || 'Extract balance, amount, store, date, items. Return JSON only.';
+
+                // 將圖片轉為純 Base64（去除 data:image/... 前綴）
+                const base64Data = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const full = e.target.result;
+                        // 去除 "data:image/jpeg;base64," 前綴
+                        const base64 = full.split(',')[1];
+                        resolve(base64);
+                    };
+                    reader.readAsDataURL(selectedFile);
+                });
+
+                // UI 狀態
+                testBtn.disabled = true;
+                testBtn.textContent = '⏳ 發送中…';
+                statusDiv.innerHTML = '<span class="badge info">⏳ 請求中，請稍候…</span>';
+                responseBox.textContent = '等待回應…';
+
+                try {
+                    const start = Date.now();
+
+                    // 呼叫 Netlify Functions 代理（同域名，無 CORS）
+                    const res = await fetch('/.netlify/functions/ocr-proxy', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            imageBase64: base64Data,
+                            prompt: prompt,
+                            model: 'qwen-vl-ocr'
+                        })
+                    });
+
+                    const elapsed = ((Date.now() - start) / 1000).toFixed(1);
+                    const text = await res.text();
+
+                    let formatted = `⏱️ 耗時：${elapsed}s\n📊 HTTP 狀態：${res.status} ${res.statusText}\n\n`;
+                    try {
+                        const json = JSON.parse(text);
+                        formatted += JSON.stringify(json, null, 2);
+                    } catch {
+                        formatted += text;
+                    }
+                    responseBox.textContent = formatted;
+
+                    if (res.ok) {
+                        // 檢查是否為阿里雲正常回覆
+                        try {
+                            const json = JSON.parse(text);
+                            if (json.choices && json.choices.length > 0) {
+                                statusDiv.innerHTML = `<span class="badge success">✅ OCR 成功！圖片已辨識 (${elapsed}s)</span>`;
+                            } else {
+                                statusDiv.innerHTML = `<span class="badge info">✅ 請求成功，但回覆格式可能非標準 (${elapsed}s)</span>`;
+                            }
+                        } catch {
+                            statusDiv.innerHTML = `<span class="badge success">✅ 請求成功 (${elapsed}s)</span>`;
+                        }
+                    } else if (res.status === 404) {
+                        statusDiv.innerHTML = `<span class="badge error">❌ 404 — Functions 未部署或路徑錯誤</span>`;
+                    } else if (res.status === 500) {
+                        statusDiv.innerHTML = `<span class="badge error">❌ 500 — 伺服器錯誤，查看下方詳情</span>`;
+                    } else {
+                        statusDiv.innerHTML = `<span class="badge error">❌ 請求失敗 (${res.status})</span>`;
+                    }
+
+                } catch (err) {
+                    responseBox.textContent = `❌ 網絡錯誤：${err.message}`;
+                    statusDiv.innerHTML = `<span class="badge error">🚫 網絡/CORS 錯誤，請檢查代理</span>`;
+                } finally {
+                    testBtn.disabled = false;
+                    testBtn.textContent = '🚀 發送測試請求（經代理）';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
