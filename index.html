@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Family Food Log Hub · v9 智能OCR</title>
+    <title>Family Food Log Hub · v10 全面OCR</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        /* ===== 全部樣式與 v7/v8 一致 ===== */
+        /* ===== 全部樣式與 v8/v9 完全一致 ===== */
         :root {
             --bg-recipe: #FDF8F0;
             --bg-card: #FFF9F0;
@@ -137,7 +137,6 @@
             box-shadow:0 0 0 3px rgba(192,57,43,0.15);
         }
 
-        /* ===== 登入頁面（v8 透明度 1%） ===== */
         .login-page {
             min-height:100vh;
             display:flex;
@@ -215,7 +214,6 @@
             background:var(--outline-tomato);
         }
 
-        /* ===== 底部導航 ===== */
         #bottomNav {
             position:fixed;
             bottom:0;left:0;right:0;
@@ -257,7 +255,6 @@
         .page-section { display:none; padding:16px 16px 20px; max-width:480px; margin:0 auto; }
         .page-section.active { display:block; }
 
-        /* ===== 交易列表 ===== */
         .txn-item {
             display:flex;
             align-items:center;
@@ -304,7 +301,6 @@
         .txn-item .txn-actions button:hover { background:#F3F4F6; }
         .txn-item .receipt-icon { font-size:16px; cursor:pointer; margin-left:2px; }
 
-        /* ===== Modal ===== */
         .modal-overlay {
             position:fixed;
             top:0;left:0;right:0;bottom:0;
@@ -650,7 +646,6 @@
         }
         .ocr-amount-hint strong { color:#C0392B; }
 
-        /* v9 新增：智能記憶標籤 */
         .memory-badge {
             display:inline-block;
             background:#E8F5E9;
@@ -664,7 +659,6 @@
         }
         .memory-badge.learned { background:#FFF3E0; color:#E65100; border-color:#FFCC80; }
 
-        /* v9 新增：OCR 解析狀態 */
         .parse-status {
             font-size:12px;
             font-weight:600;
@@ -676,7 +670,6 @@
         .parse-status.warning { background:#FFF3E0; color:#E65100; }
         .parse-status.error { background:#FFEBEE; color:#C62828; }
 
-        /* v9 新增：商店記憶編輯 */
         .keyword-chip {
             display:inline-block;
             background:#F3F4F6;
@@ -690,17 +683,49 @@
         }
         .keyword-chip:hover { background:var(--macaron-pink); border-color:var(--outline-brown); }
         .keyword-chip.active { background:var(--macaron-pink); border-color:var(--outline-tomato); }
+
+        /* V10 新增：折疊原始文本 */
+        .raw-text-toggle {
+            background:#F3F4F6;
+            border:2px dashed var(--wood-light);
+            border-radius:12px;
+            padding:6px 14px;
+            font-size:12px;
+            font-weight:600;
+            cursor:pointer;
+            text-align:center;
+            margin-top:8px;
+            transition:0.15s;
+            touch-action:manipulation;
+            -webkit-tap-highlight-color:transparent;
+        }
+        .raw-text-toggle:hover { background:var(--macaron-pink); border-color:var(--outline-brown); }
+        .raw-text-box {
+            background:#FAFAFA;
+            border:2px solid var(--wood-light);
+            border-radius:10px;
+            padding:8px 12px;
+            font-size:11px;
+            color:#4B5563;
+            max-height:150px;
+            overflow-y:auto;
+            white-space:pre-wrap;
+            word-break:break-all;
+            display:none;
+            margin-top:6px;
+        }
+        .raw-text-box.show { display:block; }
     </style>
 </head>
 <body>
 
-<!-- ===== LOGIN（v8 風格） ===== -->
+<!-- ===== LOGIN ===== -->
 <div id="loginSection" class="login-page" style="display:flex;">
     <div class="login-container">
         <div class="text-center mb-6">
             <div class="text-5xl mb-2">🍳</div>
             <h1 class="text-2xl font-extrabold text-gray-800">Family Food Log Hub</h1>
-            <p class="text-sm text-gray-500 mt-1">Made with ❤️ for Marie · v9 智能OCR</p>
+            <p class="text-sm text-gray-500 mt-1">Made with ❤️ for Marie · v10 全面OCR</p>
         </div>
         <div class="mb-5">
             <div class="text-sm font-bold text-gray-600 mb-2">Select User</div>
@@ -945,7 +970,7 @@
                     <div class="font-extrabold mb-2">📦 Data</div>
                     <button class="text-sm bg-gray-200 rounded-xl px-4 py-2 w-full font-bold" onclick="alert('匯出功能開發中')" ontouchstart="alert('匯出功能開發中')">📤 Export Data</button>
                 </div>
-                <!-- v9: 智能記憶管理 -->
+                <!-- V10: 智能記憶管理 -->
                 <div class="bg-gray-50 rounded-2xl p-4 border-2 border-wood-light">
                     <div class="font-extrabold mb-2">🧠 OCR Memory</div>
                     <div id="memoryManagerContainer" class="text-sm">
@@ -978,12 +1003,12 @@
 </div>
 
 <!-- =============================================================== -->
-<!-- JAVASCRIPT — v9 智能OCR版                                         -->
-<!-- 基於 v8 修改，主要改進 OCR 解析 + 智能記憶                       -->
+<!-- JAVASCRIPT — v10 全面OCR版                                      -->
+<!-- 保留 v8/v9 全部功能，大幅擴充關鍵詞庫 + 折扣運算 + 記憶強化    -->
 <!-- =============================================================== -->
 <script>
 // =================================================================
-// 1. 用戶與認證（不變）
+// 1. 用戶與認證（與 v9 完全一致，保留不變）
 // =================================================================
 const USER_CREDENTIALS = {
     helper: { displayName:'Marie', icon:'👩‍🍳', role:'helper' },
@@ -998,9 +1023,7 @@ let appData = {
     recipes: [],
     mealPlans: [],
     undoStack: [],
-    // v9: 智能記憶 — 每個商店的解析關鍵詞
     storeKeywords: {},
-    // v9: 商店解析規則 (進階)
     storeRules: {}
 };
 let selectedRole = 'helper';
@@ -1099,7 +1122,7 @@ function showApp() {
 }
 
 // =================================================================
-// 2. 餘額與交易（不變）
+// 2. 餘額與交易（與 v9 完全一致）
 // =================================================================
 function getBalances() {
     const settings = appData.settings || { octopusStartingBalance:500, cashStartingBalance:1000 };
@@ -1172,7 +1195,7 @@ function undoLastAction() {
 }
 
 // =================================================================
-// 3. UI 更新（不變）
+// 3. UI 更新（與 v9 一致）
 // =================================================================
 function updateAllUI() {
     if (!currentUser) return;
@@ -1248,13 +1271,12 @@ function saveSettings() {
 }
 
 // =================================================================
-// 4. 交易列表（不變）
+// 4. 交易列表（與 v9 一致）
 // =================================================================
 let txnFilter = 'all', typeFilter = 'all', selectedMonth = null;
 
 function filterTxns(f) {
     if (f==='month' && selectedMonth) {
-        // 已有 selectedMonth，直接應用
     } else if (f==='month' && !selectedMonth) {
         selectedMonth = null;
         txnFilter = 'month';
@@ -1453,7 +1475,7 @@ function renderTransactions() {
 }
 
 // =================================================================
-// 5. 交易操作（不變）
+// 5. 交易操作（與 v9 一致）
 // =================================================================
 function copyAmountOnly(id) {
     const txn = appData.transactions.find(t => t.id === id);
@@ -1515,7 +1537,7 @@ function deleteTxn(id) {
 }
 
 // =================================================================
-// 6. 查看收據（不變）
+// 6. 查看收據（與 v9 一致）
 // =================================================================
 function viewReceipt(id) {
     const txn = appData.transactions.find(t => t.id === id);
@@ -1532,7 +1554,7 @@ function viewReceipt(id) {
 }
 
 // =================================================================
-// 7. Show Txn List / History（不變）
+// 7. Show Txn List / History（與 v9 一致）
 // =================================================================
 function showTxnList() {
     document.getElementById('txnListContainer').style.display = 'block';
@@ -1547,7 +1569,7 @@ function showHistory() {
 }
 
 // =================================================================
-// 8. Adjust Balance（不變）
+// 8. Adjust Balance（與 v9 一致）
 // =================================================================
 function openAdjustBalance() {
     const html = `
@@ -1594,7 +1616,7 @@ function doAdjustBalance() {
 }
 
 // =================================================================
-// 9. Toast, Loading, Modal（不變）
+// 9. Toast, Loading, Modal（與 v9 一致）
 // =================================================================
 function showToast(msg) {
     const old = document.querySelector('.toast-float');
@@ -1623,39 +1645,34 @@ function closeModal() {
 }
 
 // =================================================================
-// 10. 🧠 智能記憶核心 (v9 新增)
+// 10. 🧠 智能記憶核心（v10 大幅強化）
 // =================================================================
 
-// 提取商店名稱（從收據文本）
+// 提取商店名稱（v10 更穩健）
 function extractStoreName(text) {
     if (!text) return null;
     const lines = text.split('\n').filter(l => l.trim().length > 0);
-    // 常見商店關鍵詞
-    const storeKeywords = ['店舖', '分店', '門市', '商店', '超市', '超級市場', '市場', '百佳', '惠康', '阿信屋', 'Fusion', 'yamazaki', '健康農場', '新元食品', '香港家猪'];
-    // 先檢查第一行
-    for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const storeKeywords = ['店舖', '分店', '門市', '商店', '超市', '超級市場', '市場', '百佳', '惠康', '阿信屋', 'Fusion', 'yamazaki', '健康農場', '新元食品', '香港家猪', '759', 'PARKnSHOP', 'WELCOME'];
+    for (let i = 0; i < Math.min(6, lines.length); i++) {
         const line = lines[i].trim();
-        // 檢查是否包含商店關鍵詞
         for (const kw of storeKeywords) {
             if (line.includes(kw)) {
-                return line.replace(/[0-9:：\s]+$/, '').trim();
+                let clean = line.replace(/[0-9:：\s]+$/, '').trim();
+                if (clean.length > 0) return clean;
             }
         }
-        // 如果行長度在 3-30 之間且不包含數字，可能是商店名
-        if (line.length >= 3 && line.length <= 30 && !/\d/.test(line) && !line.includes('收據') && !line.includes('銷售')) {
+        if (line.length >= 2 && line.length <= 30 && !/\d/.test(line) && !line.includes('收據') && !line.includes('銷售')) {
             return line;
         }
     }
-    // 嘗試從文本中提取
     const storeMatch = text.match(/([^\n]{2,30})\s*(?:收據|銷售|店|超市|市場|Food|Shop|Store)/i);
     if (storeMatch) return storeMatch[1].trim();
     return null;
 }
 
-// 提取日期（從收據文本）
+// 提取日期（v10 支援更多格式）
 function extractDate(text) {
     if (!text) return null;
-    // 多種日期格式
     const patterns = [
         /(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/g,
         /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/g,
@@ -1673,20 +1690,15 @@ function extractDate(text) {
             if (m.length >= 4) {
                 let year, month, day;
                 if (m[0].includes('年') || m[0].includes('月') || m[0].includes('日')) {
-                    // 中文日期
-                    const y = parseInt(m[1]);
-                    const mo = parseInt(m[2]);
-                    const d = parseInt(m[3]);
+                    const y = parseInt(m[1]); const mo = parseInt(m[2]); const d = parseInt(m[3]);
                     if (!isNaN(y) && !isNaN(mo) && !isNaN(d) && y > 2000 && y < 2100 && mo >= 1 && mo <= 12 && d >= 1 && d <= 31) {
                         return `${y}-${String(mo).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
                     }
                 } else {
-                    // 嘗試解析數字日期
                     let parts = m[0].split(/[\/\-]/).filter(p => p.length > 0);
                     if (parts.length === 3) {
                         let p1 = parseInt(parts[0]), p2 = parseInt(parts[1]), p3 = parseInt(parts[2]);
                         if (!isNaN(p1) && !isNaN(p2) && !isNaN(p3)) {
-                            // 嘗試各種排列
                             if (p1 >= 2000 && p1 <= 2100) { year = p1; month = p2; day = p3; }
                             else if (p3 >= 2000 && p3 <= 2100) { year = p3; month = p1; day = p2; }
                             else if (p1 >= 1 && p1 <= 31 && p2 >= 1 && p2 <= 12 && p3 >= 2000 && p3 <= 2100) { year = p3; month = p2; day = p1; }
@@ -1701,7 +1713,6 @@ function extractDate(text) {
             }
         }
     }
-    // 嘗試找 "24/07/2026" 這種格式
     const simpleMatch = text.match(/(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
     if (simpleMatch) {
         const d = parseInt(simpleMatch[1]), m = parseInt(simpleMatch[2]), y = parseInt(simpleMatch[3]);
@@ -1712,41 +1723,59 @@ function extractDate(text) {
     return null;
 }
 
-// 提取金額（從收據文本）— v9 增強版
+// ===== v10 核心：全面金額提取（支援折扣運算 + 香港常見關鍵詞）=====
 function extractAmount(text, storeName) {
     if (!text) return null;
-    // 按優先級排列的關鍵詞
+
+    // 1. 定義全港常見金額關鍵詞（按優先級排列，數字越小越優先）
     const amountPatterns = [
-        // 最優先：付款金額、扣除金額
-        { regex: /付款金額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 1 },
+        // 最高優先級：實際支付 / 扣除 / 付款
         { regex: /扣除金額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 1 },
+        { regex: /付款金額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 1 },
+        { regex: /實付金額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 1 },
+        { regex: /八達通付款[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 1 },
+        { regex: /Octopus付款[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 1 },
+        { regex: /實收[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 1 },
         { regex: /付款[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 1 },
-        // 總計類
+
+        // 第二優先級：單總、客單、總計、總數、合計等
+        { regex: /單總[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
+        { regex: /客單[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
         { regex: /單總額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
-        { regex: /單筆金額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
         { regex: /總計[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
         { regex: /總數[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
-        { regex: /小計[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 3 },
-        // 八達通相關
-        { regex: /八連通[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
-        { regex: /八達通[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
-        { regex: /Octopus[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
-        // 其他
-        { regex: /急電十[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 3 },
-        { regex: /金額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 4 },
-        { regex: /合計[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 4 },
-        { regex: /總價[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 4 },
-        // 最後兜底：找數字
-        { regex: /\$([\d,]+\.?[\d]*)/g, priority: 5 },
-        { regex: /([\d,]+\.?[\d]*)\s*(?:元|HKD|港幣)/i, priority: 5 }
+        { regex: /合計[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
+        { regex: /總額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
+        { regex: /小計[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
+        { regex: /應付金額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
+        { regex: /合共[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 2 },
+
+        // 第三優先級：八達通 / 現金 / 支付方式
+        { regex: /八達通[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 3 },
+        { regex: /八達[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 3 },
+        { regex: /Octopus[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 3 },
+        { regex: /現金[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 3 },
+
+        // 第四優先級：貨品總值（需配合折扣運算）
+        { regex: /貨品總值[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 4 },
+        { regex: /貨品總額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 4 },
+
+        // 第五優先級：一般金額關鍵詞
+        { regex: /金額[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 5 },
+        { regex: /總價[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 5 },
+        { regex: /實付[:：]\s*\$?([\d,]+\.?[\d]*)/i, priority: 5 },
+
+        // 最後兜底：$數字 或 數字元
+        { regex: /\$([\d,]+\.?[\d]*)/g, priority: 6 },
+        { regex: /([\d,]+\.?[\d]*)\s*(?:元|HKD|港幣)/i, priority: 6 }
     ];
 
-    // 如果商店有記憶，優先使用記憶中的關鍵詞
+    // 2. 如果商店有記憶，優先插入自定義關鍵詞（記憶中的關鍵詞）
     let customPatterns = [];
     if (storeName && appData.storeKeywords && appData.storeKeywords[storeName]) {
-        const memory = appData.storeKeywords[storeName];
-        if (memory.amountKeyword) {
-            const escaped = memory.amountKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const mem = appData.storeKeywords[storeName];
+        if (mem.amountKeyword) {
+            const escaped = mem.amountKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
             customPatterns.push({
                 regex: new RegExp(escaped + '[:：]\\s*\\$?([\\d,]+\\.?[\\d]*)', 'i'),
                 priority: 0.5
@@ -1755,105 +1784,132 @@ function extractAmount(text, storeName) {
     }
 
     const allPatterns = [...customPatterns, ...amountPatterns];
-    // 按優先級排序
     allPatterns.sort((a, b) => (a.priority || 99) - (b.priority || 99));
+
+    // 3. 嘗試提取金額
+    let bestAmount = null;
+    let bestPriority = 999;
+    let matchedPattern = null;
+    let matchedValue = null;
 
     for (const p of allPatterns) {
         const matches = text.matchAll(p.regex);
-        let bestMatch = null;
-        let bestValue = 0;
         for (const m of matches) {
             if (m.length >= 2) {
                 let val = parseFloat(m[1].replace(/,/g, ''));
                 if (!isNaN(val) && val > 0 && val < 10000) {
-                    if (val > bestValue) {
-                        bestValue = val;
-                        bestMatch = m;
+                    // 如果優先級更高或相同但數值更合理，則選取
+                    if (p.priority < bestPriority || (p.priority === bestPriority && val > (bestAmount || 0))) {
+                        bestAmount = val;
+                        bestPriority = p.priority;
+                        matchedPattern = p;
+                        matchedValue = m[0];
                     }
                 }
             }
         }
-        // 如果是全局正則，需要特殊處理
-        if (bestMatch) {
-            const val = parseFloat(bestMatch[1].replace(/,/g, ''));
-            if (!isNaN(val) && val > 0 && val < 10000) {
-                return val;
+    }
+
+    // 4. 特殊處理：如果有「貨品總值」和「折扣」，計算支付金額
+    if (bestAmount === null || bestPriority >= 4) {
+        const grossMatch = text.match(/貨品總值[:：]\s*\$?([\d,]+\.?[\d]*)/i);
+        const discountMatch = text.match(/折扣[:：]\s*\$?([\d,]+\.?[\d]*)/i);
+        if (grossMatch) {
+            const gross = parseFloat(grossMatch[1].replace(/,/g, ''));
+            if (!isNaN(gross) && gross > 0) {
+                let discount = 0;
+                if (discountMatch) {
+                    discount = parseFloat(discountMatch[1].replace(/,/g, ''));
+                    if (isNaN(discount)) discount = 0;
+                }
+                const finalAmt = gross - discount;
+                if (finalAmt > 0 && finalAmt < 10000) {
+                    if (bestAmount === null || finalAmt > bestAmount) {
+                        bestAmount = finalAmt;
+                    }
+                }
             }
         }
     }
 
-    // 最後嘗試從商品列表中提取總和
-    const items = extractItems(text);
-    if (items && items.length > 0) {
-        let total = 0;
-        for (const item of items) {
-            if (item.price && item.price > 0) {
-                total += item.price;
+    // 5. 如果仍然為空，嘗試從商品列表中計算總價（作為最後手段）
+    if (bestAmount === null) {
+        const items = extractItems(text);
+        if (items && items.length > 0) {
+            let total = 0;
+            for (const item of items) {
+                if (item.price && item.price > 0) {
+                    total += item.price;
+                }
             }
-        }
-        if (total > 0 && total < 10000) {
-            return total;
+            if (total > 0 && total < 10000) {
+                bestAmount = total;
+            }
         }
     }
 
-    return null;
+    return bestAmount;
 }
 
-// 提取商品列表（從收據文本）— v9 增強版
+// 提取商品列表（v10 支援更多格式，並強化價格提取）
 function extractItems(text) {
     if (!text) return [];
     const items = [];
     const lines = text.split('\n');
 
-    // 嘗試找到商品區域
-    let startIndex = -1;
-    let endIndex = lines.length;
+    // 常見商品分隔模式
+    const patterns = [
+        // 模式1: "品名: XXX  $7 X 1 件"
+        /品名[:：]\s*([^\n]*?)(?:\s*\$([\d,]+\.?[\d]*)\s*X\s*[\d]+)?/i,
+        // 模式2: "XXX 件  $數字"
+        /([^\n]{2,30})\s+件\s*\$?([\d,]+\.?[\d]*)/i,
+        // 模式3: "XXX  $數字 x 數量"
+        /([^\n]{2,30})\s*\$?([\d,]+\.?[\d]*)\s*[xX]\s*[\d]+/i,
+        // 模式4: "XXX  $數字"
+        /([^\n]{2,30})\s*\$?([\d,]+\.?[\d]*)\s*$/i,
+        // 模式5: "克" 或 "g" 後面的價格
+        /([^\n]{2,30})\s*[\d]+\s*(?:克|g)\s*\$?([\d,]+\.?[\d]*)/i
+    ];
+
+    let startIdx = 0;
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
-        if (line.includes('貨品') || line.includes('品名') || line.includes('件') || line.includes('數量')) {
-            if (startIndex === -1) startIndex = i;
-        }
-        if (line.includes('總計') || line.includes('付款') || line.includes('合計') || line.includes('小計')) {
-            endIndex = Math.min(endIndex, i);
-        }
-    }
-    if (startIndex === -1) startIndex = 0;
-
-    // 從商品區域提取
-    for (let i = startIndex; i < Math.min(endIndex, lines.length); i++) {
-        const line = lines[i].trim();
         if (!line || line.length < 2) continue;
-        // 檢查是否包含商品名稱和價格
-        const priceMatch = line.match(/(\d+\.?\d*)\s*(?:元|HKD|$)/);
-        if (priceMatch) {
-            const price = parseFloat(priceMatch[1]);
-            if (!isNaN(price) && price > 0 && price < 10000) {
-                let name = line.replace(priceMatch[0], '').trim();
+        if (line.includes('總計') || line.includes('付款') || line.includes('合計') || line.includes('單總')) {
+            break; // 到達金額區域，停止解析商品
+        }
+        let found = false;
+        for (const pattern of patterns) {
+            const match = line.match(pattern);
+            if (match) {
+                let name = match[1] ? match[1].trim() : '';
+                let price = match[2] ? parseFloat(match[2].replace(/,/g, '')) : 0;
                 // 清理名稱
                 name = name.replace(/^[0-9]+\.?\s*/, '').replace(/件$/, '').trim();
-                if (name.length > 0 && name.length < 50) {
-                    items.push({ name: name, price: price });
+                if (name.length > 0 && name.length < 50 && !/[:：]/.test(name)) {
+                    const exists = items.some(it => it.name === name);
+                    if (!exists) {
+                        items.push({ name: name, price: isNaN(price) ? 0 : price });
+                        found = true;
+                        break;
+                    }
                 }
             }
-        } else {
-            // 沒有價格的行，可能是商品名稱
-            if (line.length > 2 && line.length < 40 && !/[:：]/.test(line) && !/^\d+$/.test(line)) {
-                // 檢查是否已經有類似的商品
-                const exists = items.some(it => it.name === line);
-                if (!exists) {
-                    items.push({ name: line, price: 0 });
-                }
+        }
+        // 如果沒有匹配到，但行長度合適且包含中文，作為商品名稱（價格為0）
+        if (!found && line.length > 2 && line.length < 40 && /[\u4e00-\u9fa5]/.test(line) && !/[:：]/.test(line) && !/^\d+$/.test(line)) {
+            const exists = items.some(it => it.name === line);
+            if (!exists) {
+                items.push({ name: line, price: 0 });
             }
         }
     }
 
-    // 如果提取的商品太少，嘗試另一種方法
+    // 如果提取的商品太少，嘗試用「件」來找
     if (items.length < 2) {
-        // 查找 "件" 後面的商品
         const itemMatches = text.matchAll(/([^\n]{2,30})\s+件/g);
         for (const m of itemMatches) {
             let name = m[1].trim();
-            // 檢查是否包含價格
             const priceMatch = name.match(/(\d+\.?\d*)$/);
             let price = 0;
             if (priceMatch) {
@@ -1872,25 +1928,16 @@ function extractItems(text) {
     return items;
 }
 
-// 智能解析收據文本 (v9 核心)
+// 智能解析收據（v10）
 function smartParseReceipt(text) {
     if (!text || text.trim() === '') {
         return { amount: null, store: null, date: null, items: [], description: '', rawText: text };
     }
-
-    // 1. 提取商店名稱
     let store = extractStoreName(text);
-
-    // 2. 提取日期
     let date = extractDate(text);
-
-    // 3. 提取金額（使用商店記憶）
     let amount = extractAmount(text, store);
-
-    // 4. 提取商品列表
     let items = extractItems(text);
 
-    // 5. 生成描述
     let description = '';
     if (items && items.length > 0) {
         const names = items.map(it => it.name).filter(n => n && n.length > 0);
@@ -1898,9 +1945,7 @@ function smartParseReceipt(text) {
             description = names.join('、');
         }
     }
-    // 如果沒有商品名稱，嘗試從文本中提取
     if (!description && text) {
-        // 取前幾行中可能包含商品名稱的部分
         const lines = text.split('\n').filter(l => l.trim().length > 0);
         for (const line of lines) {
             if (line.length > 2 && line.length < 40 && !/[:：]/.test(line) && !/^\d+$/.test(line) && !line.includes('收據') && !line.includes('銷售')) {
@@ -1910,79 +1955,82 @@ function smartParseReceipt(text) {
         }
     }
 
-    // 6. 後處理：如果金額為 null，嘗試從 items 中計算總價
-    if (amount === null && items && items.length > 0) {
-        let total = 0;
-        for (const item of items) {
-            if (item.price && item.price > 0) {
-                total += item.price;
-            }
-        }
-        if (total > 0 && total < 10000) {
-            amount = total;
-        }
-    }
-
-    // 7. 如果商店名稱為空，嘗試從文本中提取
     if (!store && text) {
         const lines = text.split('\n').filter(l => l.trim().length > 0);
         for (const line of lines) {
-            if (line.length >= 3 && line.length <= 30 && !/\d/.test(line) && !line.includes('收據') && !line.includes('銷售')) {
+            if (line.length >= 2 && line.length <= 30 && !/\d/.test(line) && !line.includes('收據') && !line.includes('銷售')) {
                 store = line.trim();
                 break;
             }
         }
     }
-
-    // 8. 如果日期為空，使用今天
     if (!date) {
         date = new Date().toISOString().split('T')[0];
     }
 
-    return {
-        amount: amount,
-        store: store,
-        date: date,
-        items: items,
-        description: description,
-        rawText: text
-    };
+    return { amount, store, date, items, description, rawText: text };
 }
 
-// 保存商店關鍵詞 (智能記憶)
-function saveStoreKeywords(storeName, text, confirmedAmount, confirmedItems) {
-    if (!storeName || storeName.trim() === '') return;
-    storeName = storeName.trim();
-
-    if (!appData.storeKeywords) appData.storeKeywords = {};
-    if (!appData.storeKeywords[storeName]) {
-        appData.storeKeywords[storeName] = {};
-    }
-
-    // 嘗試提取金額關鍵詞
-    if (confirmedAmount && text) {
-        const amountPatterns = [
-            /付款金額[:：]/i, /扣除金額[:：]/i, /單總額[:：]/i, /總計[:：]/i,
-            /總數[:：]/i, /小計[:：]/i, /八連通[:：]/i, /八達通[:：]/i,
-            /Octopus[:：]/i, /急電十[:：]/i, /金額[:：]/i, /合計[:：]/i
-        ];
-        for (const pattern of amountPatterns) {
-            const match = text.match(pattern);
-            if (match) {
-                const kw = match[0].replace(/[:：]/, '').trim();
-                if (kw && kw.length > 0) {
-                    appData.storeKeywords[storeName].amountKeyword = kw;
-                    break;
+// ===== v10 強化記憶學習：動態提取金額關鍵詞 =====
+function learnAmountKeyword(storeName, rawText, confirmedAmount) {
+    if (!storeName || !rawText || !confirmedAmount) return;
+    // 掃描原始文本，尋找與 confirmedAmount 匹配的關鍵詞
+    const lines = rawText.split('\n');
+    for (const line of lines) {
+        // 尋找包含金額的關鍵詞
+        const match = line.match(/([^\d:：]{1,10})[:：]\s*\$?[\d,]+\s*\.?\s*[\d]*/);
+        if (match) {
+            const keyword = match[1].trim();
+            if (keyword && keyword.length > 0 && keyword.length < 15) {
+                // 檢查這行的金額是否與 confirmedAmount 接近
+                const amtMatch = line.match(/([\d,]+\.?[\d]*)/);
+                if (amtMatch) {
+                    const amt = parseFloat(amtMatch[1].replace(/,/g, ''));
+                    if (!isNaN(amt) && Math.abs(amt - confirmedAmount) < 0.01) {
+                        // 找到匹配的關鍵詞，保存
+                        if (!appData.storeKeywords) appData.storeKeywords = {};
+                        if (!appData.storeKeywords[storeName]) appData.storeKeywords[storeName] = {};
+                        appData.storeKeywords[storeName].amountKeyword = keyword;
+                        appData.storeKeywords[storeName].lastUpdated = new Date().toISOString();
+                        saveToStorage();
+                        renderMemoryManager();
+                        return;
+                    }
                 }
             }
         }
     }
+    // 如果找不到，嘗試從「八達通」、「單總」等常見詞中提取
+    const fallbackKeywords = ['單總', '客單', '總計', '總數', '付款金額', '扣除金額', '八達通', '八達', 'Octopus', '小計', '合計'];
+    for (const kw of fallbackKeywords) {
+        const regex = new RegExp(kw + '[:：]\\s*\\$?[' + confirmedAmount + ']');
+        if (regex.test(rawText)) {
+            if (!appData.storeKeywords) appData.storeKeywords = {};
+            if (!appData.storeKeywords[storeName]) appData.storeKeywords[storeName] = {};
+            appData.storeKeywords[storeName].amountKeyword = kw;
+            appData.storeKeywords[storeName].lastUpdated = new Date().toISOString();
+            saveToStorage();
+            renderMemoryManager();
+            return;
+        }
+    }
+}
 
-    // 嘗試提取商品關鍵詞
-    if (confirmedItems && confirmedItems.length > 0 && text) {
+// 保存商店記憶（v10 增強）
+function saveStoreKeywords(storeName, rawText, confirmedAmount, confirmedItems) {
+    if (!storeName || storeName.trim() === '') return;
+    storeName = storeName.trim();
+    if (!appData.storeKeywords) appData.storeKeywords = {};
+    if (!appData.storeKeywords[storeName]) appData.storeKeywords[storeName] = {};
+
+    // 學習金額關鍵詞
+    learnAmountKeyword(storeName, rawText, confirmedAmount);
+
+    // 學習商品關鍵詞
+    if (confirmedItems && confirmedItems.length > 0 && rawText) {
         const itemPatterns = [/貨品[:：]/i, /品名[:：]/i, /件/g];
         for (const pattern of itemPatterns) {
-            const match = text.match(pattern);
+            const match = rawText.match(pattern);
             if (match) {
                 let kw = match[0];
                 if (kw.includes('件')) kw = '件';
@@ -1995,7 +2043,6 @@ function saveStoreKeywords(storeName, text, confirmedAmount, confirmedItems) {
         }
     }
 
-    // 保存示例數據
     appData.storeKeywords[storeName].sampleAmount = confirmedAmount;
     appData.storeKeywords[storeName].sampleItems = confirmedItems;
     appData.storeKeywords[storeName].lastUpdated = new Date().toISOString();
@@ -2005,18 +2052,16 @@ function saveStoreKeywords(storeName, text, confirmedAmount, confirmedItems) {
     showToast(`🧠 已學習「${storeName}」的解析模式`);
 }
 
-// 渲染智能記憶管理
+// 渲染記憶管理（與 v9 一致）
 function renderMemoryManager() {
     const container = document.getElementById('memoryManagerContainer');
     if (!container) return;
-
     const keywords = appData.storeKeywords || {};
     const keys = Object.keys(keywords);
     if (keys.length === 0) {
         container.innerHTML = '<div class="text-gray-400 text-sm">No memory yet. Scan receipts to learn.</div>';
         return;
     }
-
     let html = '<div class="space-y-2">';
     for (const store of keys) {
         const mem = keywords[store];
@@ -2058,7 +2103,7 @@ function clearAllMemory() {
 }
 
 // =================================================================
-// 11. OCTOPUS OCR (v9 智能版)
+// 11. OCTOPUS OCR (v10 全面增強版)
 // =================================================================
 function openOCRScanner() {
     const input = document.createElement('input');
@@ -2084,28 +2129,18 @@ function openOCRScanner() {
                 reader.readAsDataURL(file);
             });
 
-            // v9: 更詳細的 prompt
             const prompt = `你是一個香港收據OCR專家。請從這張收據圖片中提取以下信息：
-
 1. 商店名稱 (store): 收據上的店舖名稱，例如 "759阿信屋"、"Fusion"、"yamazaki"、"健康農場"、"香港家猪"、"新元食品" 等。
 2. 交易日期 (date): 收據上的日期，格式為 YYYY-MM-DD。
 3. 付款金額 (amount): 實際支付的金額。請注意：
-   - 優先使用 "付款金額"、"扣除金額"、"單總額"、"總計"、"總數" 等欄位的數值。
-   - 對於八達通支付，請使用 "八連通"、"八達通"、"Octopus" 後面的金額。
-   - 對於現金支付，請使用 "小計" 或 "合計" 後面的金額。
+   - 優先使用 "付款金額"、"扣除金額"、"單總"、"客單"、"總計"、"總數"、"合計"、"八達通"、"八達"、"Octopus" 等欄位的數值。
+   - 如果找到 "貨品總值" 和 "折扣"，請計算 貨品總值 - 折扣 = 實付金額。
    - 金額應為正數，範圍在 $1-$5000 之間。
 4. 商品列表 (items): 收據上購買的商品名稱列表。請提取所有商品名稱，並盡量提供每個商品的價格（如果有的話）。
    - 格式為: [{name: "商品名", price: 價格}, ...]
    - 如果商品沒有價格，price 設為 0。
-
 請以 JSON 格式返回結果，結構如下：
-{
-    "store": "商店名稱",
-    "date": "YYYY-MM-DD",
-    "amount": 123.45,
-    "items": [{"name": "商品1", "price": 10.5}, {"name": "商品2", "price": 20.0}]
-}
-
+{"store": "商店名稱", "date": "YYYY-MM-DD", "amount": 123.45, "items": [{"name": "商品1", "price": 10.5}, {"name": "商品2", "price": 20.0}]}
 如果某個字段無法提取，請設為 null。只返回 JSON，不要有其他文字。`;
 
             const response = await fetch('/.netlify/functions/ocr-proxy', {
@@ -2121,45 +2156,38 @@ function openOCRScanner() {
             hideLoading();
 
             if (!response.ok) {
-                showOCRResultV9(null, fullDataURL, 'OCR 請求失敗: ' + (result.error || response.status));
+                showOCRResultV10(null, fullDataURL, 'OCR 請求失敗: ' + (result.error || response.status));
                 return;
             }
 
             const rawContent = result.choices?.[0]?.message?.content;
             if (!rawContent) {
-                showOCRResultV9(null, fullDataURL, 'OCR 回傳格式異常');
+                showOCRResultV10(null, fullDataURL, 'OCR 回傳格式異常');
                 return;
             }
 
-            // 嘗試解析 JSON
             let parsedData = null;
-            let jsonError = null;
             try {
-                // 嘗試提取 JSON
                 const jsonMatch = rawContent.match(/\{[\s\S]*\}/);
                 if (jsonMatch) {
                     parsedData = JSON.parse(jsonMatch[0]);
                 } else {
                     parsedData = JSON.parse(rawContent);
                 }
-                // 驗證數據
                 if (parsedData && parsedData.amount !== undefined && parsedData.amount !== null) {
                     parsedData.amount = parseFloat(parsedData.amount);
                 }
                 if (parsedData && parsedData.items && Array.isArray(parsedData.items)) {
-                    // 清理商品列表
                     parsedData.items = parsedData.items.filter(it => it && it.name && it.name.length > 0);
                 } else {
                     parsedData.items = [];
                 }
             } catch (e) {
-                jsonError = e;
                 parsedData = null;
             }
 
             // 如果 JSON 解析失敗，使用智能解析
             if (!parsedData) {
-                // 使用智能解析
                 const smartResult = smartParseReceipt(rawContent);
                 parsedData = {
                     store: smartResult.store,
@@ -2167,68 +2195,49 @@ function openOCRScanner() {
                     amount: smartResult.amount,
                     items: smartResult.items.map(it => ({ name: it.name, price: it.price || 0 }))
                 };
-                // 如果有描述但沒有商品，用描述作為單一商品
                 if ((!parsedData.items || parsedData.items.length === 0) && smartResult.description) {
                     parsedData.items = [{ name: smartResult.description, price: parsedData.amount || 0 }];
                 }
             }
 
-            // 如果仍然沒有數據，顯示錯誤
             if (!parsedData || (parsedData.amount === null && parsedData.store === null)) {
-                showOCRResultV9(null, fullDataURL, '無法識別收據內容，請手動輸入');
+                showOCRResultV10(null, fullDataURL, '無法識別收據內容，請手動輸入');
                 return;
             }
 
-            // v9: 如果有商店名稱，嘗試應用記憶
+            // 應用記憶
             if (parsedData.store && appData.storeKeywords && appData.storeKeywords[parsedData.store]) {
                 const mem = appData.storeKeywords[parsedData.store];
-                // 如果記憶中有金額關鍵詞，但解析出的金額為 null，嘗試用記憶中的樣本
                 if ((parsedData.amount === null || parsedData.amount === undefined || isNaN(parsedData.amount)) && mem.sampleAmount) {
                     parsedData.amount = mem.sampleAmount;
                 }
-                // 如果記憶中有商品樣本，但解析出的商品為空，用記憶中的樣本
                 if ((!parsedData.items || parsedData.items.length === 0) && mem.sampleItems && mem.sampleItems.length > 0) {
                     parsedData.items = mem.sampleItems.map(name => ({ name: name, price: 0 }));
                 }
                 showToast(`🧠 使用了「${parsedData.store}」的記憶`);
             }
 
-            // 後處理：如果金額仍然為 null，嘗試從商品列表中提取
-            if ((parsedData.amount === null || parsedData.amount === undefined || isNaN(parsedData.amount)) && parsedData.items && parsedData.items.length > 0) {
-                let total = 0;
-                for (const item of parsedData.items) {
-                    if (item.price && item.price > 0) {
-                        total += item.price;
-                    }
-                }
-                if (total > 0 && total < 10000) {
-                    parsedData.amount = total;
-                }
-            }
-
-            // 確保金額有效
+            // 最後兜底
             if (parsedData.amount === null || parsedData.amount === undefined || isNaN(parsedData.amount) || parsedData.amount <= 0) {
-                // 嘗試從原始文本中提取
                 const fallbackAmount = extractAmount(rawContent, parsedData.store);
                 if (fallbackAmount && fallbackAmount > 0) {
                     parsedData.amount = fallbackAmount;
                 }
             }
 
-            // 顯示結果
-            showOCRResultV9(parsedData, fullDataURL, null);
+            showOCRResultV10(parsedData, fullDataURL, null);
 
         } catch (err) {
             hideLoading();
-            showOCRResultV9(null, null, '發生錯誤: ' + err.message);
+            showOCRResultV10(null, null, '發生錯誤: ' + err.message);
             console.error(err);
         }
     };
     input.click();
 }
 
-// v9: OCR 結果顯示 (增強版)
-function showOCRResultV9(data, imageBase64, errorMsg) {
+// ===== v10 OCR 結果顯示（修復 .toFixed 錯誤 + 顯示原始文本）=====
+function showOCRResultV10(data, imageBase64, errorMsg) {
     window._ocrImageBase64 = imageBase64;
     window._ocrParsedData = data;
     window._ocrRawText = data ? data.rawText : null;
@@ -2241,7 +2250,6 @@ function showOCRResultV9(data, imageBase64, errorMsg) {
         <div class="modal-title">📸 OCR Result</div>
     `;
 
-    // 狀態顯示
     let statusHtml = '';
     if (errorMsg) {
         statusHtml = `<span class="parse-status error">⚠️ ${errorMsg}</span>`;
@@ -2251,7 +2259,6 @@ function showOCRResultV9(data, imageBase64, errorMsg) {
         statusHtml = `<span class="parse-status warning">⚠️ 部分識別失敗，請手動修正</span>`;
     }
 
-    // 記憶標籤
     let memoryHtml = '';
     if (data && data.store && appData.storeKeywords && appData.storeKeywords[data.store]) {
         memoryHtml = `<span class="memory-badge learned">🧠 已學習</span>`;
@@ -2276,7 +2283,6 @@ function showOCRResultV9(data, imageBase64, errorMsg) {
 
     html += amountHint;
 
-    // 編輯表單
     const storeVal = data?.store || '';
     const dateVal = data?.date || '';
     const amountVal = data?.amount && data.amount > 0 ? data.amount : '';
@@ -2306,21 +2312,31 @@ function showOCRResultV9(data, imageBase64, errorMsg) {
         </div>
     `;
 
-    // 商品列表詳細顯示
+    // 顯示商品列表（修復 .toFixed 錯誤）
     if (data && data.items && data.items.length > 0) {
         let itemListHtml = '<div class="mt-2 text-sm"><span class="font-bold">📋 商品列表:</span><ul class="list-disc pl-4 mt-1">';
         for (const item of data.items) {
-            const priceStr = item.price && item.price > 0 ? `$${item.price.toFixed(2)}` : '—';
-            itemListHtml += `<li>${item.name} ${priceStr !== '—' ? '('+priceStr+')' : ''}</li>`;
+            let priceNum = parseFloat(item.price);
+            if (isNaN(priceNum)) priceNum = 0;
+            const priceStr = priceNum > 0 ? `$${priceNum.toFixed(2)}` : '—';
+            itemListHtml += `<li>${item.name || '未命名商品'} ${priceStr !== '—' ? '('+priceStr+')' : ''}</li>`;
         }
         itemListHtml += '</ul></div>';
         html += itemListHtml;
     }
 
-    // 操作按鈕
+    // v10 新增：折疊原始文本（輔助調試）
+    const rawText = window._ocrRawText || '';
+    if (rawText) {
+        html += `
+            <div class="raw-text-toggle" onclick="toggleRawText()" ontouchstart="toggleRawText()">📄 查看原始 OCR 文本</div>
+            <div class="raw-text-box" id="rawTextBox">${rawText.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+        `;
+    }
+
     html += `
         <div class="flex gap-3 mt-4 flex-wrap">
-            <button class="btn-macaron flex-1" onclick="confirmOCRV9()" ontouchstart="confirmOCRV9()">✅ 確認</button>
+            <button class="btn-macaron flex-1" onclick="confirmOCRV10()" ontouchstart="confirmOCRV10()">✅ 確認</button>
             <button class="btn-macaron-outline flex-1" onclick="closeModal();openOCRScanner();" ontouchstart="closeModal();openOCRScanner();">🔄 重新掃描</button>
             <button class="btn-macaron-outline flex-1" onclick="closeModal()" ontouchstart="closeModal()">取消</button>
         </div>
@@ -2330,8 +2346,13 @@ function showOCRResultV9(data, imageBase64, errorMsg) {
     openModal(html);
 }
 
-// v9: 確認 OCR 結果
-function confirmOCRV9() {
+function toggleRawText() {
+    const box = document.getElementById('rawTextBox');
+    if (box) box.classList.toggle('show');
+}
+
+// ===== v10 確認 OCR 結果（強化記憶學習）=====
+function confirmOCRV10() {
     const store = document.getElementById('ocrEditStore').value.trim();
     const amount = parseFloat(document.getElementById('ocrEditAmount').value);
     const date = document.getElementById('ocrEditDate').value || new Date().toISOString().split('T')[0];
@@ -2342,34 +2363,29 @@ function confirmOCRV9() {
         return;
     }
 
-    // 解析商品列表
     let items = [];
     if (itemsText) {
         items = itemsText.split(/[,，、\s]+/).filter(s => s.trim().length > 0);
     }
-
-    // 如果沒有商品，使用商店名稱或 "購物" 作為描述
     let description = items.length > 0 ? items.join('、') : (store || '購物');
-
-    // 獲取原始圖片數據
     const imageData = window._ocrImageBase64 || '';
+    const rawText = window._ocrRawText || '';
 
-    // 添加交易
     addTransaction('octopus', amount, {
         store: store || 'OCR 掃描',
         description: description,
         date: new Date(date).toISOString(),
-        note: 'OCR 掃描 (v9)',
+        note: 'OCR 掃描 (v10)',
         receiptImage: imageData,
         receiptImageUrl: imageData,
         item: items.length > 0 ? items[0] : (store || '購物')
     });
 
-    // 🧠 智能記憶：如果商店名稱不為空，保存解析模式
+    // 🧠 智能記憶：強化學習
     if (store && store.length > 0) {
-        // 提取商品名稱列表（用於記憶）
         const itemNames = items.length > 0 ? items : (window._ocrParsedData?.items?.map(it => it.name) || []);
-        saveStoreKeywords(store, window._ocrRawText || '', amount, itemNames);
+        // 調用增強的記憶保存函數（會自動學習金額關鍵詞）
+        saveStoreKeywords(store, rawText, amount, itemNames);
     }
 
     closeModal();
@@ -2377,7 +2393,7 @@ function confirmOCRV9() {
 }
 
 // =================================================================
-// 12. Top-up & Cash In（不變）
+// 12. Top-up & Cash In（與 v9 一致）
 // =================================================================
 function openTopUp() {
     const html = `
@@ -2453,7 +2469,7 @@ function doCashIn() {
 }
 
 // =================================================================
-// 13. Transport & Routes（不變）
+// 13. Transport & Routes（與 v9 一致，省略以節省篇幅，但保留完整功能）
 // =================================================================
 function openTransport() {
     const routes = getRouteHistory();
@@ -2595,11 +2611,15 @@ function quickTransportCustom(route, amount) {
 }
 
 // =================================================================
-// 14. 語音功能（不變，保留 v8 全部）
+// 14. 語音功能（與 v9 完全一致，此處省略詳細代碼以節省篇幅，但保留全部功能）
 // =================================================================
-let speechRec = null, mediaRecorder = null, audioChunks = [], isSpeechRecording = false;
-let currentTranscript = '', currentAudioBase64 = null, voiceMode = 'single';
+// 以下所有語音相關函數均保留 v9 版本不變，包括：
+// startSpeech, stopSpeech, processVoiceResult, showVoiceResultTable, addVoiceRow, confirmVoiceTable
+// openVoiceSingle, openVoiceCombo, openVoiceMarket, startMarketSegment, stopMarketSegment, pauseMarketSegment, resumeMarketSegment, doneMarketSegment, parseVoiceText, renderMarketSegments, deleteMarketSegment, confirmMarketSegments
+// 以及 selectCategory, selectPlace, showPopupMenu, setCategory, setPlace
+// 和 getItemHistory, getStoreHistory, getCategoryHistory, getPlaceHistory, getRouteHistory, getTransportTypeHistory
 
+// 為確保完整性，以下補上必要的輔助函數（與 v9 一致）
 function getItemHistory() {
     const txns = appData.transactions || [];
     const items = new Set();
@@ -2650,6 +2670,10 @@ function getTransportTypeHistory() {
     }
     return Array.from(types).filter(Boolean);
 }
+
+// 語音核心函數（保留 v9 全部）
+let speechRec = null, mediaRecorder = null, audioChunks = [], isSpeechRecording = false;
+let currentTranscript = '', currentAudioBase64 = null, voiceMode = 'single';
 
 function startSpeech(lang = 'en-US') {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
@@ -2893,9 +2917,6 @@ function confirmVoiceTable() {
     currentAudioBase64 = null;
 }
 
-// =================================================================
-// 15. Category/Place 選擇（不變）
-// =================================================================
 function selectCategory(el) {
     const categories = ['🥩 Meat', '🥬 Veg', '🧂 Seasoning', '🍚 Staple', '🥛 Dairy', '🐟 Seafood', '🍎 Fruit', '🧊 Frozen', '🧻 Household', '🥤 Drinks', '🍬 Snacks', '💊 Pharmacy', '❓ Other'];
     const html = categories.map(c => `<button class="block w-full text-left px-4 py-2 hover:bg-pink-50" onclick="setCategory(this, '${c}')" ontouchstart="setCategory(this, '${c}')">${c}</button>`).join('');
@@ -2936,9 +2957,6 @@ function setPlace(btn, place) {
     btn.closest('div')?.remove();
 }
 
-// =================================================================
-// 16. 語音入口（不變）
-// =================================================================
 function openVoiceSingle() {
     voiceMode = 'single';
     const html = `
@@ -2975,9 +2993,6 @@ function stopSpeechAndProcessCombo() {
     processVoiceResult(text, true);
 }
 
-// =================================================================
-// 17. Market 模式（不變）
-// =================================================================
 let marketSegments = [], marketTranscript = '', marketAudioSegments = [];
 function openVoiceMarket() {
     marketSegments = []; marketAudioSegments = [];
@@ -3178,7 +3193,7 @@ function confirmMarketSegments() {
 }
 
 // =================================================================
-// 18. Type 模式（不變）
+// 15. Type 模式（與 v9 一致，保留全部）
 // =================================================================
 function openTypeMode() {
     const itemHistory = getItemHistory();
@@ -3424,7 +3439,7 @@ function confirmTypeMode() {
 }
 
 // =================================================================
-// 19. Edit Transaction（不變）
+// 16. Edit Transaction（與 v9 一致）
 // =================================================================
 function editTxn(id) {
     const txn = appData.transactions.find(t => t.id === id);
@@ -3555,7 +3570,7 @@ function saveEditTxn(id) {
 }
 
 // =================================================================
-// 20. 導航與通知（不變）
+// 17. 導航與通知（與 v9 一致）
 // =================================================================
 function navigateTo(section) {
     document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
@@ -3586,7 +3601,7 @@ document.addEventListener('click', function(e) {
 });
 
 // =================================================================
-// 21. 初始化
+// 18. 初始化
 // =================================================================
 function init() {
     const hasAuth = loadFromStorage();
@@ -3601,7 +3616,6 @@ function init() {
     document.getElementById('loginPassword').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') handleLogin();
     });
-    // 初始化記憶管理
     renderMemoryManager();
 }
 document.addEventListener('DOMContentLoaded', init);
