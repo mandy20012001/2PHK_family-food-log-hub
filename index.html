@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Family Food Log Hub · v22 修復版</title>
+    <title>Family Food Log Hub · v6 修復版</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        /* ===== 全部樣式與 v20 一致（此處省略，沿用完整樣式） ===== */
+        /* ===== 全部樣式與 v22 一致，僅修改 LOGIN 背景透明度 ===== */
         :root {
             --bg-recipe: #FDF8F0;
             --bg-card: #FFF9F0;
@@ -165,7 +165,8 @@
             z-index:1;
             width:100%;
             max-width:380px;
-            background:rgba(255,249,240,0.60);
+            /* v6 修改：背景透明度改為 10% */
+            background:rgba(255,249,240,0.10);
             backdrop-filter:blur(14px);
             -webkit-backdrop-filter:blur(14px);
             border:4px solid var(--outline-brown);
@@ -920,7 +921,7 @@
 </div>
 
 <!-- =============================================================== -->
-<!-- JAVASCRIPT — v22 修復版（僅改動一處：收據圖標位置與樣式）      -->
+<!-- JAVASCRIPT — v6 修復版（基於 v22 修改）                         -->
 <!-- =============================================================== -->
 <script>
 // =================================================================
@@ -1181,7 +1182,7 @@ function saveSettings() {
 }
 
 // =================================================================
-// 4. 交易列表（修改：收據圖標移至最右，並改為 🖼️）
+// 4. 交易列表（不變）
 // =================================================================
 let txnFilter = 'all', typeFilter = 'all', selectedMonth = null;
 
@@ -1189,14 +1190,12 @@ function filterTxns(f) {
     if (f==='month' && selectedMonth) {
         // 已有 selectedMonth，直接應用
     } else if (f==='month' && !selectedMonth) {
-        // 若無月份，默認最近30天
         selectedMonth = null;
         txnFilter = 'month';
     } else if (f!=='month') {
         selectedMonth = null;
         txnFilter = f;
     }
-    // 更新按鈕樣式
     const btns = document.querySelectorAll('#txnListContainer .flex .rounded-full');
     const map = { today:0, week:1, month:2, all:3 };
     btns.forEach((b,i) => {
@@ -1207,7 +1206,6 @@ function filterTxns(f) {
     renderTransactions();
 }
 
-// 新增：打開月份選擇器
 function openMonthPicker() {
     const html = `
         <button class="modal-close" onclick="closeModal()" ontouchstart="closeModal()">✕</button>
@@ -1229,7 +1227,7 @@ function openMonthPicker() {
 function applyMonthFilter() {
     const val = document.getElementById('monthPickerInput').value;
     if (!val) { showToast('請選擇月份'); return; }
-    selectedMonth = val; // YYYY-MM
+    selectedMonth = val;
     txnFilter = 'month';
     closeModal();
     filterTxns('month');
@@ -1290,7 +1288,6 @@ function renderCategoryPlaceFilters() {
     placeContainer.innerHTML = placeHtml;
 }
 
-// ===== 核心修改：renderTransactions 中將收據圖標移至最右，並改為 🖼️ =====
 function renderTransactions() {
     const container = document.getElementById('transactionList');
     let txns = appData.transactions || [];
@@ -1359,13 +1356,11 @@ function renderTransactions() {
         const day = String(dateObj.getDate()).padStart(2,'0');
         const dateStr = month+'/'+day;
 
-        // 收據圖標：改為 🖼️，並在 actions 最右顯示
         let receiptIcon = '';
         if (t.receiptImage || t.receiptImageUrl) {
             receiptIcon = `<span class="receipt-icon" onclick="viewReceipt('${t.id}')" ontouchstart="viewReceipt('${t.id}')" title="查看收據">🖼️</span>`;
         }
 
-        // 將收據圖標放在所有按鈕之後（最右）
         let actions = `
             <button onclick="copyAmountOnly('${t.id}')" ontouchstart="copyAmountOnly('${t.id}')" title="Copy Amount">💰</button>
             <button onclick="editTxn('${t.id}')" ontouchstart="editTxn('${t.id}')" title="Edit">✏️</button>
@@ -1562,13 +1557,15 @@ function closeModal() {
 }
 
 // =================================================================
-// 10. OCTOPUS OCR（不變，已支援直接彈出相機/相簿）
+// 10. OCTOPUS OCR（v6 修改：移除 capture，讓用戶自由選擇拍照/相簿）
+//     改良金額提取邏輯，並將 Items 標籤改為 Description
 // =================================================================
 function openOCRScanner() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    input.capture = 'environment';
+    // v6 修改：移除 capture 屬性，讓用戶在手機上自由選擇「拍照」或「從相簿選擇」
+    // input.capture = 'environment';  // 已移除
     input.onchange = async function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -1629,6 +1626,19 @@ function openOCRScanner() {
                     items: itemsMatch ? itemsMatch[1].trim() : null
                 };
             }
+            // v6 修改：智能金額提取 — 如果 amount 為 null，但 items 中含有金額，則自動提取
+            if (parsedData.amount === null || parsedData.amount === undefined || isNaN(parsedData.amount)) {
+                const itemsText = parsedData.items || '';
+                const amountInItems = itemsText.match(/(\d+(\.\d+)?)/);
+                if (amountInItems) {
+                    const extracted = parseFloat(amountInItems[1]);
+                    if (!isNaN(extracted) && extracted > 0) {
+                        parsedData.amount = extracted;
+                        // 從 items 中移除金額數字，避免重複
+                        parsedData.items = itemsText.replace(amountInItems[0], '').trim();
+                    }
+                }
+            }
             if (parsedData.amount) parsedData.amount = parseFloat(parsedData.amount);
             showOCRResult(parsedData, fullDataURL, null);
         } catch (err) {
@@ -1642,12 +1652,8 @@ function openOCRScanner() {
 
 function showOCRResult(data, imageBase64, errorMsg) {
     window._ocrImageBase64 = imageBase64;
-    const stores = new Set();
-    for (const t of appData.transactions) {
-        if (t.store) stores.add(t.store);
-        if (t.place) stores.add(t.place);
-    }
-    const storeList = Array.from(stores).filter(Boolean);
+    // v6 修改：使用獨立分類歷史
+    const stores = getStoreHistory();
     const datalistId = 'ocrStoreDatalist';
 
     let html = `
@@ -1661,10 +1667,10 @@ function showOCRResult(data, imageBase64, errorMsg) {
                 <div><label class="text-sm text-gray-500 font-bold">💰 Amount</label><input type="number" id="ocrEditAmount" step="0.1" /></div>
                 <div><label class="text-sm text-gray-500 font-bold">🏪 Store</label>
                     <input type="text" id="ocrEditStore" list="${datalistId}" />
-                    <datalist id="${datalistId}">${storeList.map(s=>`<option value="${s}">`).join('')}</datalist>
+                    <datalist id="${datalistId}">${stores.map(s=>`<option value="${s}">`).join('')}</datalist>
                 </div>
                 <div><label class="text-sm text-gray-500 font-bold">📅 Date</label><input type="date" id="ocrEditDate" /></div>
-                <div><label class="text-sm text-gray-500 font-bold">📦 Items (will become Description)</label><input type="text" id="ocrEditItems" /></div>
+                <div><label class="text-sm text-gray-500 font-bold">📝 Description</label><input type="text" id="ocrEditItems" /></div>
             </div>
         `;
     } else {
@@ -1678,10 +1684,11 @@ function showOCRResult(data, imageBase64, errorMsg) {
                 <div><label class="text-sm text-gray-500 font-bold">💰 Amount</label><input type="number" id="ocrEditAmount" value="${data?.amount || ''}" step="0.1" /></div>
                 <div><label class="text-sm text-gray-500 font-bold">🏪 Store</label>
                     <input type="text" id="ocrEditStore" value="${data?.store || ''}" list="${datalistId}" />
-                    <datalist id="${datalistId}">${storeList.map(s=>`<option value="${s}">`).join('')}</datalist>
+                    <datalist id="${datalistId}">${stores.map(s=>`<option value="${s}">`).join('')}</datalist>
                 </div>
                 <div><label class="text-sm text-gray-500 font-bold">📅 Date</label><input type="date" id="ocrEditDate" value="${data?.date || ''}" /></div>
-                <div><label class="text-sm text-gray-500 font-bold">📦 Items (will become Description)</label><input type="text" id="ocrEditItems" value="${data?.items || ''}" /></div>
+                <!-- v6 修改：將 Items 改為 Description -->
+                <div><label class="text-sm text-gray-500 font-bold">📝 Description</label><input type="text" id="ocrEditItems" value="${data?.items || ''}" /></div>
             </div>
         `;
     }
@@ -1716,7 +1723,7 @@ function confirmOCR() {
 }
 
 // =================================================================
-// 11. Top-up & Cash In（不變，已有快捷鍵自動扣）
+// 11. Top-up & Cash In（不變）
 // =================================================================
 function openTopUp() {
     const html = `
@@ -1792,9 +1799,11 @@ function doCashIn() {
 }
 
 // =================================================================
-// 12. Transport & Routes（不變）
+// 12. Transport & Routes（v6 修改：Route 使用獨立歷史）
 // =================================================================
 function openTransport() {
+    const routes = getRouteHistory();
+    const datalistId = 'transportRouteDatalist';
     const html = `
         <button class="modal-close" onclick="closeModal()" ontouchstart="closeModal()">✕</button>
         <div class="modal-title">🚌 Transport</div>
@@ -1808,7 +1817,11 @@ function openTransport() {
                     <option value="other">🚕 Other</option>
                 </select>
             </div>
-            <div><label class="text-sm text-gray-500 font-bold">Route</label><input type="text" id="transportRoute" placeholder="e.g. 268M" /></div>
+            <div>
+                <label class="text-sm text-gray-500 font-bold">Route</label>
+                <input type="text" id="transportRoute" placeholder="e.g. 268M" list="${datalistId}" />
+                <datalist id="${datalistId}">${routes.map(r=>`<option value="${r}">`).join('')}</datalist>
+            </div>
             <div><label class="text-sm text-gray-500 font-bold">Amount (HKD)</label><input type="number" id="transportAmount" placeholder="10.10" step="0.1" /></div>
             <div class="flex gap-3">
                 <button class="btn-macaron flex-1" onclick="doTransport()" ontouchstart="doTransport()">✅ Confirm</button>
@@ -1928,20 +1941,61 @@ function quickTransportCustom(route, amount) {
 }
 
 // =================================================================
-// 13. 語音功能（優化錯誤提示，修復 service-not-allowed）
+// 13. 語音功能（不變，但內部使用獨立歷史）
 // =================================================================
 let speechRec = null, mediaRecorder = null, audioChunks = [], isSpeechRecording = false;
 let currentTranscript = '', currentAudioBase64 = null, voiceMode = 'single';
 
-function getHistoryItemList() {
+// v6 修改：使用獨立分類歷史
+function getItemHistory() {
     const txns = appData.transactions || [];
     const items = new Set();
     for (const t of txns) {
         if (t.item) items.add(t.item);
-        if (t.store) items.add(t.store);
-        if (t.description) items.add(t.description);
     }
     return Array.from(items).filter(Boolean);
+}
+function getStoreHistory() {
+    const txns = appData.transactions || [];
+    const stores = new Set();
+    for (const t of txns) {
+        if (t.store) stores.add(t.store);
+    }
+    return Array.from(stores).filter(Boolean);
+}
+function getCategoryHistory() {
+    const txns = appData.transactions || [];
+    const cats = new Set();
+    for (const t of txns) {
+        if (t.category) cats.add(t.category);
+    }
+    return Array.from(cats).filter(Boolean);
+}
+function getPlaceHistory() {
+    const txns = appData.transactions || [];
+    const places = new Set();
+    for (const t of txns) {
+        if (t.place) places.add(t.place);
+    }
+    return Array.from(places).filter(Boolean);
+}
+function getRouteHistory() {
+    const txns = appData.transactions || [];
+    const routes = new Set();
+    for (const t of txns) {
+        if (t.type === 'transport' && (t.store || t.item)) {
+            routes.add(t.store || t.item);
+        }
+    }
+    return Array.from(routes).filter(Boolean);
+}
+function getTransportTypeHistory() {
+    const txns = appData.transactions || [];
+    const types = new Set();
+    for (const t of txns) {
+        if (t.transportType) types.add(t.transportType);
+    }
+    return Array.from(types).filter(Boolean);
 }
 
 function startSpeech(lang = 'en-US') {
@@ -1981,7 +2035,6 @@ function startSpeech(lang = 'en-US') {
     };
 
     speechRec.onerror = function(e) {
-        // 特別處理 service-not-allowed
         if (e.error === 'service-not-allowed') {
             showToast('⚠️ 語音服務不可用，請檢查網絡或使用手動輸入');
             stopSpeech();
@@ -1999,9 +2052,7 @@ function startSpeech(lang = 'en-US') {
         stopSpeech();
     };
 
-    speechRec.onend = function() {
-        // 正常結束不做特殊處理
-    };
+    speechRec.onend = function() {};
 
     navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
@@ -2082,19 +2133,33 @@ function processVoiceResult(text, allowAddRow = true) {
     showVoiceResultTable(items, '🎤 語音結果 (可編輯)', allowAddRow);
 }
 
+// v6 修改：Voice 使用獨立歷史
 function showVoiceResultTable(items, title, allowAddRow = true) {
-    const historyItems = getHistoryItemList();
-    const datalistId = 'voiceDatalist_' + Date.now();
+    const itemHistory = getItemHistory();
+    const catHistory = getCategoryHistory();
+    const placeHistory = getPlaceHistory();
+    const itemDatalistId = 'voiceItemDatalist_' + Date.now();
+    const catDatalistId = 'voiceCatDatalist_' + Date.now();
+    const placeDatalistId = 'voicePlaceDatalist_' + Date.now();
 
     let rows = items.map((item, idx) => `
         <tr>
             <td>${idx+1}</td>
             <td>
-                <input type="text" class="voice-name" value="${item.name || ''}" placeholder="Item" list="${datalistId}" />
+                <input type="text" class="voice-name" value="${item.name || ''}" placeholder="Item" list="${itemDatalistId}" />
+                <datalist id="${itemDatalistId}">${itemHistory.map(n=>`<option value="${n}">`).join('')}</datalist>
             </td>
             <td><input type="number" class="voice-price" value="${item.amount || 0}" step="0.1" placeholder="0" /></td>
-            <td><span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">${item.cat || '⏳'}</span><input type="hidden" class="voice-cat" value="${item.cat || ''}" /></td>
-            <td><span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">${item.place || '⏳'}</span><input type="hidden" class="voice-place" value="${item.place || ''}" /></td>
+            <td>
+                <span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">${item.cat || '⏳'}</span>
+                <input type="hidden" class="voice-cat" value="${item.cat || ''}" list="${catDatalistId}" />
+                <datalist id="${catDatalistId}">${catHistory.map(c=>`<option value="${c}">`).join('')}</datalist>
+            </td>
+            <td>
+                <span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">${item.place || '⏳'}</span>
+                <input type="hidden" class="voice-place" value="${item.place || ''}" list="${placeDatalistId}" />
+                <datalist id="${placeDatalistId}">${placeHistory.map(p=>`<option value="${p}">`).join('')}</datalist>
+            </td>
             <td><button onclick="this.closest('tr').remove()" ontouchstart="this.closest('tr').remove()">🗑️</button></td>
         </tr>
     `).join('');
@@ -2102,9 +2167,6 @@ function showVoiceResultTable(items, title, allowAddRow = true) {
     let html = `
         <button class="modal-close" onclick="closeModal(); stopSpeech();" ontouchstart="closeModal(); stopSpeech();">✕</button>
         <div class="modal-title">${title}</div>
-        <datalist id="${datalistId}">
-            ${historyItems.map(name => `<option value="${name}">`).join('')}
-        </datalist>
         <div style="max-height:300px;overflow-y:auto;">
             <table class="type-table">
                 <thead><tr><th>#</th><th>Item</th><th>Price</th><th>Category</th><th>Place</th><th></th></tr></thead>
@@ -2127,14 +2189,26 @@ function addVoiceRow() {
     const tbody = document.getElementById('voiceTableBody');
     const count = tbody.children.length + 1;
     const firstInput = tbody.querySelector('input.voice-name');
-    const listId = firstInput ? firstInput.getAttribute('list') : '';
+    const itemListId = firstInput ? firstInput.getAttribute('list') : '';
+    const catHistory = getCategoryHistory();
+    const placeHistory = getPlaceHistory();
+    const catDatalistId = 'voiceCatDatalist_' + Date.now();
+    const placeDatalistId = 'voicePlaceDatalist_' + Date.now();
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td>${count}</td>
-        <td><input type="text" class="voice-name" placeholder="Item" list="${listId}" /></td>
+        <td><input type="text" class="voice-name" placeholder="Item" list="${itemListId}" /></td>
         <td><input type="number" class="voice-price" placeholder="0" step="0.1" /></td>
-        <td><span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">⏳</span><input type="hidden" class="voice-cat" value="" /></td>
-        <td><span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">⏳</span><input type="hidden" class="voice-place" value="" /></td>
+        <td>
+            <span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">⏳</span>
+            <input type="hidden" class="voice-cat" value="" list="${catDatalistId}" />
+            <datalist id="${catDatalistId}">${catHistory.map(c=>`<option value="${c}">`).join('')}</datalist>
+        </td>
+        <td>
+            <span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">⏳</span>
+            <input type="hidden" class="voice-place" value="" list="${placeDatalistId}" />
+            <datalist id="${placeDatalistId}">${placeHistory.map(p=>`<option value="${p}">`).join('')}</datalist>
+        </td>
         <td><button onclick="this.closest('tr').remove()" ontouchstart="this.closest('tr').remove()">🗑️</button></td>
     `;
     tbody.appendChild(tr);
@@ -2452,37 +2526,41 @@ function confirmMarketSegments() {
 }
 
 // =================================================================
-// 17. Type 模式（移除 Description 列）
+// 17. Type 模式（v6 修改：使用獨立分類歷史）
 // =================================================================
 function openTypeMode() {
-    const txns = appData.transactions || [];
-    const itemCount = {};
-    for (const t of txns) {
-        const key = t.item || t.store || 'Unknown';
-        itemCount[key] = (itemCount[key] || 0) + 1;
-    }
-    const sorted = Object.entries(itemCount).sort((a,b) => b[1]-a[1]).slice(0,10);
-    const uniqueItems = Object.keys(itemCount);
-    const datalistId = 'typeDatalist_' + Date.now();
+    const itemHistory = getItemHistory();
+    const catHistory = getCategoryHistory();
+    const placeHistory = getPlaceHistory();
+    const itemDatalistId = 'typeItemDatalist_' + Date.now();
+    const catDatalistId = 'typeCatDatalist_' + Date.now();
+    const placeDatalistId = 'typePlaceDatalist_' + Date.now();
 
     const html = `
         <button class="modal-close" onclick="closeModal()" ontouchstart="closeModal()">✕</button>
         <div class="modal-title">⌨️ Type Entry</div>
         <div class="text-sm text-gray-500 mb-2 font-bold">Add items manually. Click ⏳ to choose category/place.</div>
-        <!-- 已移除 Description 相關提示 -->
-        <datalist id="${datalistId}">
-            ${uniqueItems.map(name => `<option value="${name}">`).join('')}
-        </datalist>
         <div style="max-height:250px;overflow-y:auto;">
             <table class="type-table">
                 <thead><tr><th>#</th><th>Item</th><th>Price</th><th>Category</th><th>Place</th><th></th></tr></thead>
                 <tbody id="typeTableBody">
                     <tr>
                         <td>1</td>
-                        <td><input type="text" class="type-name" placeholder="e.g. Pork" list="${datalistId}" /></td>
+                        <td>
+                            <input type="text" class="type-name" placeholder="e.g. Pork" list="${itemDatalistId}" />
+                            <datalist id="${itemDatalistId}">${itemHistory.map(n=>`<option value="${n}">`).join('')}</datalist>
+                        </td>
                         <td><input type="number" class="type-price" placeholder="25" step="0.1" /></td>
-                        <td><span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">⏳</span><input type="hidden" class="type-cat" value="" /></td>
-                        <td><span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">⏳</span><input type="hidden" class="type-place" value="" /></td>
+                        <td>
+                            <span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">⏳</span>
+                            <input type="hidden" class="type-cat" value="" list="${catDatalistId}" />
+                            <datalist id="${catDatalistId}">${catHistory.map(c=>`<option value="${c}">`).join('')}</datalist>
+                        </td>
+                        <td>
+                            <span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">⏳</span>
+                            <input type="hidden" class="type-place" value="" list="${placeDatalistId}" />
+                            <datalist id="${placeDatalistId}">${placeHistory.map(p=>`<option value="${p}">`).join('')}</datalist>
+                        </td>
                         <td><button onclick="removeTypeRow(this)" ontouchstart="removeTypeRow(this)">🗑️</button></td>
                     </tr>
                 </tbody>
@@ -2571,14 +2649,29 @@ function addTypeRow() {
     const tbody = document.getElementById('typeTableBody');
     const count = tbody.children.length + 1;
     const firstInput = tbody.querySelector('input.type-name');
-    const listId = firstInput ? firstInput.getAttribute('list') : '';
+    const itemListId = firstInput ? firstInput.getAttribute('list') : '';
+    const catHistory = getCategoryHistory();
+    const placeHistory = getPlaceHistory();
+    const catDatalistId = 'typeCatDatalist_' + Date.now();
+    const placeDatalistId = 'typePlaceDatalist_' + Date.now();
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td>${count}</td>
-        <td><input type="text" class="type-name" placeholder="Item name" list="${listId}" /></td>
+        <td>
+            <input type="text" class="type-name" placeholder="Item name" list="${itemListId}" />
+            <datalist id="${itemListId}">${getItemHistory().map(n=>`<option value="${n}">`).join('')}</datalist>
+        </td>
         <td><input type="number" class="type-price" placeholder="0" step="0.1" /></td>
-        <td><span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">⏳</span><input type="hidden" class="type-cat" value="" /></td>
-        <td><span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">⏳</span><input type="hidden" class="type-place" value="" /></td>
+        <td>
+            <span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">⏳</span>
+            <input type="hidden" class="type-cat" value="" list="${catDatalistId}" />
+            <datalist id="${catDatalistId}">${catHistory.map(c=>`<option value="${c}">`).join('')}</datalist>
+        </td>
+        <td>
+            <span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">⏳</span>
+            <input type="hidden" class="type-place" value="" list="${placeDatalistId}" />
+            <datalist id="${placeDatalistId}">${placeHistory.map(p=>`<option value="${p}">`).join('')}</datalist>
+        </td>
         <td><button onclick="removeTypeRow(this)" ontouchstart="removeTypeRow(this)">🗑️</button></td>
     `;
     tbody.appendChild(tr);
@@ -2620,14 +2713,29 @@ function addHistoryItem(name) {
     const tbody = document.getElementById('typeTableBody');
     const count = tbody.children.length + 1;
     const firstInput = tbody.querySelector('input.type-name');
-    const listId = firstInput ? firstInput.getAttribute('list') : '';
+    const itemListId = firstInput ? firstInput.getAttribute('list') : '';
+    const catHistory = getCategoryHistory();
+    const placeHistory = getPlaceHistory();
+    const catDatalistId = 'typeCatDatalist_' + Date.now();
+    const placeDatalistId = 'typePlaceDatalist_' + Date.now();
     const tr = document.createElement('tr');
     tr.innerHTML = `
         <td>${count}</td>
-        <td><input type="text" class="type-name" value="${name}" list="${listId}" /></td>
+        <td>
+            <input type="text" class="type-name" value="${name}" list="${itemListId}" />
+            <datalist id="${itemListId}">${getItemHistory().map(n=>`<option value="${n}">`).join('')}</datalist>
+        </td>
         <td><input type="number" class="type-price" placeholder="0" step="0.1" /></td>
-        <td><span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">⏳</span><input type="hidden" class="type-cat" value="" /></td>
-        <td><span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">⏳</span><input type="hidden" class="type-place" value="" /></td>
+        <td>
+            <span class="clickable-badge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">⏳</span>
+            <input type="hidden" class="type-cat" value="" list="${catDatalistId}" />
+            <datalist id="${catDatalistId}">${catHistory.map(c=>`<option value="${c}">`).join('')}</datalist>
+        </td>
+        <td>
+            <span class="clickable-badge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">⏳</span>
+            <input type="hidden" class="type-place" value="" list="${placeDatalistId}" />
+            <datalist id="${placeDatalistId}">${placeHistory.map(p=>`<option value="${p}">`).join('')}</datalist>
+        </td>
         <td><button onclick="removeTypeRow(this)" ontouchstart="removeTypeRow(this)">🗑️</button></td>
     `;
     tbody.appendChild(tr);
@@ -2648,7 +2756,6 @@ function confirmTypeMode() {
         if (!price || price <= 0) continue;
         const cat = tr.querySelector('.type-cat').value || '';
         const place = tr.querySelector('.type-place').value || '';
-        // 不再使用 description，全部記錄為 cash
         addTransaction('cash', price, {
             item: name,
             note: 'Typed: ' + cat + ' @ ' + place,
@@ -2665,7 +2772,7 @@ function confirmTypeMode() {
 }
 
 // =================================================================
-// 18. Edit Transaction（不變）
+// 18. Edit Transaction（v6 修改：使用獨立歷史）
 // =================================================================
 function editTxn(id) {
     const txn = appData.transactions.find(t => t.id === id);
@@ -2683,6 +2790,14 @@ function editTxn(id) {
     const itemLabel = isOctopus ? '📝 Item (optional)' : '📝 Item';
     const descLabel = isOctopus ? '📝 Description (main for Octopus)' : '📝 Description (optional)';
 
+    // v6 修改：獨立歷史
+    const itemHistory = getItemHistory();
+    const catHistory = getCategoryHistory();
+    const placeHistory = getPlaceHistory();
+    const itemDatalistId = 'editItemDatalist';
+    const catDatalistId = 'editCatDatalist';
+    const placeDatalistId = 'editPlaceDatalist';
+
     const html = `
         <button class="modal-close" onclick="closeModal()" ontouchstart="closeModal()">✕</button>
         <div class="modal-title">✏️ Edit Transaction</div>
@@ -2697,7 +2812,8 @@ function editTxn(id) {
             </div>
             <div>
                 <label class="text-sm text-gray-500 font-bold">${itemLabel}</label>
-                <input type="text" id="editItem" value="${txn.item || ''}" placeholder="Item name" />
+                <input type="text" id="editItem" value="${txn.item || ''}" placeholder="Item name" list="${itemDatalistId}" />
+                <datalist id="${itemDatalistId}">${itemHistory.map(n=>`<option value="${n}">`).join('')}</datalist>
             </div>
             <div>
                 <label class="text-sm text-gray-500 font-bold">${descLabel}</label>
@@ -2706,12 +2822,14 @@ function editTxn(id) {
             <div>
                 <label class="text-sm text-gray-500 font-bold">🏷️ Category</label>
                 <span class="clickable-badge" id="editCategoryBadge" onclick="selectCategory(this)" ontouchstart="selectCategory(this)">${txn.category || '⏳'}</span>
-                <input type="hidden" id="editCategory" value="${txn.category || ''}" />
+                <input type="hidden" id="editCategory" value="${txn.category || ''}" list="${catDatalistId}" />
+                <datalist id="${catDatalistId}">${catHistory.map(c=>`<option value="${c}">`).join('')}</datalist>
             </div>
             <div>
                 <label class="text-sm text-gray-500 font-bold">📍 Place</label>
                 <span class="clickable-badge" id="editPlaceBadge" onclick="selectPlace(this)" ontouchstart="selectPlace(this)">${txn.place || '⏳'}</span>
-                <input type="hidden" id="editPlace" value="${txn.place || ''}" />
+                <input type="hidden" id="editPlace" value="${txn.place || ''}" list="${placeDatalistId}" />
+                <datalist id="${placeDatalistId}">${placeHistory.map(p=>`<option value="${p}">`).join('')}</datalist>
             </div>
             <div>
                 <label class="text-sm text-gray-500 font-bold">💰 Amount (HKD)</label>
