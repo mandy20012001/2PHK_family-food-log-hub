@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Family Food Log Hub · v10.1 修復版</title>
+    <title>Family Food Log Hub · v10.1 + Drive</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -724,7 +724,7 @@
         <div class="text-center mb-6">
             <div class="text-5xl mb-2">🍳</div>
             <h1 class="text-2xl font-extrabold text-gray-800">Family Food Log Hub</h1>
-            <p class="text-sm text-gray-500 mt-1">Made with ❤️ for Marie · v10.1 修復版</p>
+            <p class="text-sm text-gray-500 mt-1">Made with ❤️ for Marie · v10.1 + Drive</p>
         </div>
         <div class="mb-5">
             <div class="text-sm font-bold text-gray-600 mb-2">Select User</div>
@@ -951,12 +951,15 @@
         <div class="card-macaron">
             <h2 class="text-xl font-extrabold text-gray-800 mb-4">⚙️ Settings</h2>
             <div class="space-y-4">
+                <!-- User -->
                 <div class="bg-gray-50 rounded-2xl p-4 border-2 border-wood-light">
                     <div class="flex justify-between items-center">
                         <div><div class="font-extrabold">👤 User</div><div class="text-sm text-gray-500 font-bold" id="settingsUser">Marie (Helper)</div></div>
                         <button class="text-sm text-red-400 font-bold" onclick="handleLogout()" ontouchstart="handleLogout()">Logout</button>
                     </div>
                 </div>
+
+                <!-- Starting Balances -->
                 <div class="bg-gray-50 rounded-2xl p-4 border-2 border-wood-light">
                     <div class="font-extrabold mb-2">💰 Starting Balances</div>
                     <div class="grid grid-cols-2 gap-3">
@@ -965,10 +968,38 @@
                     </div>
                     <button class="btn-macaron text-sm w-full mt-3" onclick="saveSettings()" ontouchstart="saveSettings()">💾 Save Settings</button>
                 </div>
+
+                <!-- Data -->
                 <div class="bg-gray-50 rounded-2xl p-4 border-2 border-wood-light">
                     <div class="font-extrabold mb-2">📦 Data</div>
                     <button class="text-sm bg-gray-200 rounded-xl px-4 py-2 w-full font-bold" onclick="alert('匯出功能開發中')" ontouchstart="alert('匯出功能開發中')">📤 Export Data</button>
                 </div>
+
+                <!-- ===== NEW: Google Drive Settings ===== -->
+                <div class="bg-gray-50 rounded-2xl p-4 border-2 border-wood-light">
+                    <div class="font-extrabold mb-2">☁️ Google Drive Backup</div>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold">Apps Script URL</label>
+                            <input type="url" id="driveScriptUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+                        </div>
+                        <div>
+                            <label class="text-xs text-gray-500 font-bold">Root Folder ID</label>
+                            <input type="text" id="driveRootFolderId" placeholder="1abc..." />
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" id="autoUploadReceipt" class="accent-pink-400" />
+                            <label for="autoUploadReceipt" class="text-sm font-semibold">Automatically upload receipt images</label>
+                        </div>
+                        <div class="flex gap-2 flex-wrap">
+                            <button class="btn-macaron-outline text-sm px-4 py-1" onclick="testDriveConnection()" ontouchstart="testDriveConnection()">🔗 Test Connection</button>
+                            <button class="btn-macaron text-sm px-4 py-1" onclick="backupToDrive()" ontouchstart="backupToDrive()">📤 Backup Now</button>
+                        </div>
+                        <div id="driveStatus" class="text-sm text-gray-500"></div>
+                    </div>
+                </div>
+
+                <!-- OCR Memory -->
                 <div class="bg-gray-50 rounded-2xl p-4 border-2 border-wood-light">
                     <div class="font-extrabold mb-2">🧠 OCR Memory</div>
                     <div id="memoryManagerContainer" class="text-sm">
@@ -1001,8 +1032,7 @@
 </div>
 
 <!-- =============================================================== -->
-<!-- JAVASCRIPT — v10.1 修復版                                      -->
-<!-- 修復 matchAll 正則缺少 g 標誌的錯誤，提升 OCR 穩定性           -->
+<!-- JAVASCRIPT — v10.1 修復版 + Google Drive 整合                   -->
 <!-- =============================================================== -->
 <script>
 // =================================================================
@@ -1043,6 +1073,7 @@ function loadFromStorage() {
             if (!t.place) t.place = '';
             if (!t.description) t.description = '';
             if (!t.item) t.item = '';
+            if (!t.receiptImageUrl) t.receiptImageUrl = null;
         });
         const auth = localStorage.getItem('family_food_log_hub_auth');
         if (auth) {
@@ -1117,6 +1148,10 @@ function showApp() {
     renderRoutes();
     renderCategoryPlaceFilters();
     renderMemoryManager();
+    // 回填 Drive 設定
+    document.getElementById('driveScriptUrl').value = appData.settings?.driveScriptUrl || '';
+    document.getElementById('driveRootFolderId').value = appData.settings?.driveRootFolderId || '';
+    document.getElementById('autoUploadReceipt').checked = appData.settings?.autoUploadReceipt || false;
 }
 
 // =================================================================
@@ -1193,7 +1228,7 @@ function undoLastAction() {
 }
 
 // =================================================================
-// 3. UI 更新（不變）
+// 3. UI 更新（不變，但加入 Drive 設定回填）
 // =================================================================
 function updateAllUI() {
     if (!currentUser) return;
@@ -1261,9 +1296,15 @@ function updateAllUI() {
 function saveSettings() {
     const oct = parseFloat(document.getElementById('settingsOctopusStart').value) || 0;
     const cash = parseFloat(document.getElementById('settingsCashStart').value) || 0;
+    const driveScriptUrl = document.getElementById('driveScriptUrl').value.trim();
+    const driveRootFolderId = document.getElementById('driveRootFolderId').value.trim();
+    const autoUpload = document.getElementById('autoUploadReceipt').checked;
     if (confirm('更改起始餘額會重新計算所有歷史交易，確定？')) {
         appData.settings.octopusStartingBalance = oct;
         appData.settings.cashStartingBalance = cash;
+        appData.settings.driveScriptUrl = driveScriptUrl;
+        appData.settings.driveRootFolderId = driveRootFolderId;
+        appData.settings.autoUploadReceipt = autoUpload;
         saveToStorage(); updateAllUI(); showToast('✅ Settings saved!');
     }
 }
@@ -1540,7 +1581,7 @@ function deleteTxn(id) {
 function viewReceipt(id) {
     const txn = appData.transactions.find(t => t.id === id);
     if (!txn) return;
-    const src = txn.receiptImage || txn.receiptImageUrl;
+    const src = txn.receiptImageUrl || txn.receiptImage;
     if (!src) { showToast('❌ No receipt image'); return; }
     const html = `
         <button class="modal-close" onclick="closeModal()" ontouchstart="closeModal()">✕</button>
@@ -1761,7 +1802,6 @@ function extractAmount(text, storeName) {
         const mem = appData.storeKeywords[storeName];
         if (mem.amountKeyword) {
             const escaped = mem.amountKeyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            // 重要：動態正則必須帶 g 標誌
             customPatterns.push({
                 regex: new RegExp(escaped + '[:：]\\s*\\$?([\\d,]+\\.?[\\d]*)', 'gi'),
                 priority: 0.5
@@ -2063,7 +2103,7 @@ function clearAllMemory() {
 }
 
 // =================================================================
-// 11. OCTOPUS OCR (v10.1 修復)
+// 11. OCTOPUS OCR (v10.1 修復 + Drive 上傳)
 // =================================================================
 function openOCRScanner() {
     const input = document.createElement('input');
@@ -2298,7 +2338,7 @@ function toggleRawText() {
     if (box) box.classList.toggle('show');
 }
 
-function confirmOCRV10() {
+async function confirmOCRV10() {
     const store = document.getElementById('ocrEditStore').value.trim();
     const amount = parseFloat(document.getElementById('ocrEditAmount').value);
     const date = document.getElementById('ocrEditDate').value || new Date().toISOString().split('T')[0];
@@ -2317,13 +2357,37 @@ function confirmOCRV10() {
     const imageData = window._ocrImageBase64 || '';
     const rawText = window._ocrRawText || '';
 
+    // ---- 新增：嘗試上傳圖片到 Google Drive ----
+    let receiptImageUrl = null;
+    const settings = appData.settings || {};
+    if (settings.autoUploadReceipt && imageData) {
+        try {
+            // 將 base64 轉為 Blob
+            const byteCharacters = atob(imageData);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'image/jpeg' });
+            const fileName = `receipt_${Date.now()}.jpg`;
+            const result = await uploadToDrive(blob, fileName, '01_Receipts');
+            receiptImageUrl = result.fileUrl || '';
+            showToast('📸 Receipt uploaded to Drive');
+        } catch (err) {
+            console.warn('Upload receipt failed:', err);
+            showToast('⚠️ 收據上傳失敗，但交易仍會儲存');
+        }
+    }
+
+    // 建立交易記錄，並將 receiptImageUrl 存入
     addTransaction('octopus', amount, {
         store: store || 'OCR 掃描',
         description: description,
         date: new Date(date).toISOString(),
         note: 'OCR 掃描 (v10.1)',
-        receiptImage: imageData,
-        receiptImageUrl: imageData,
+        receiptImage: imageData,          // 保留本地 base64
+        receiptImageUrl: receiptImageUrl, // Google Drive 連結（如有）
         item: items.length > 0 ? items[0] : (store || '購物')
     });
 
@@ -2337,7 +2401,90 @@ function confirmOCRV10() {
 }
 
 // =================================================================
-// 12. Top-up & Cash In（不變）
+// 12. Google Drive 上傳函數（新整合）
+// =================================================================
+function getDriveSettings() {
+    const settings = appData.settings || {};
+    return {
+        scriptUrl: settings.driveScriptUrl || '',
+        rootFolderId: settings.driveRootFolderId || '',
+        autoUpload: settings.autoUploadReceipt || false
+    };
+}
+
+async function uploadToDrive(fileBlob, fileName, subFolder = '') {
+    const settings = getDriveSettings();
+    if (!settings.scriptUrl || !settings.rootFolderId) {
+        throw new Error('Google Drive not configured. Please set Script URL and Folder ID in Settings.');
+    }
+
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+            const base64 = e.target.result.split(',')[1]; // 去掉 data 前綴
+            const payload = {
+                folderId: settings.rootFolderId,
+                subFolder: subFolder,
+                filename: fileName,
+                mimeType: fileBlob.type || 'application/octet-stream',
+                data: base64
+            };
+            try {
+                const response = await fetch(settings.scriptUrl, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    resolve(result);
+                } else {
+                    reject(new Error(result.error || 'Upload failed'));
+                }
+            } catch (err) {
+                reject(err);
+            }
+        };
+        reader.readAsDataURL(fileBlob);
+    });
+}
+
+async function backupToDrive() {
+    const statusEl = document.getElementById('driveStatus');
+    if (!statusEl) return;
+    statusEl.textContent = '⏳ Uploading...';
+    try {
+        const dataStr = JSON.stringify(appData, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const fileName = `backup_${new Date().toISOString().slice(0,10)}.json`;
+        const result = await uploadToDrive(blob, fileName, 'Backup');
+        statusEl.textContent = `✅ Backup successful! File: ${result.fileUrl || 'uploaded'}`;
+        showToast('📤 Data backed up to Google Drive');
+    } catch (err) {
+        statusEl.textContent = `❌ Backup failed: ${err.message}`;
+        showToast('❌ Backup failed');
+        console.error(err);
+    }
+}
+
+async function testDriveConnection() {
+    const statusEl = document.getElementById('driveStatus');
+    if (!statusEl) return;
+    statusEl.textContent = '⏳ Testing...';
+    try {
+        const testBlob = new Blob(['Drive connection test'], { type: 'text/plain' });
+        const result = await uploadToDrive(testBlob, 'test.txt', '');
+        statusEl.textContent = '✅ Connection successful!';
+        showToast('🔗 Drive connected');
+    } catch (err) {
+        statusEl.textContent = `❌ Connection failed: ${err.message}`;
+        showToast('❌ Drive connection failed');
+    }
+}
+
+// =================================================================
+// 13. Top-up & Cash In（不變）
 // =================================================================
 function openTopUp() {
     const html = `
@@ -2413,7 +2560,7 @@ function doCashIn() {
 }
 
 // =================================================================
-// 13. Transport & Routes（不變）
+// 14. Transport & Routes（不變）
 // =================================================================
 function openTransport() {
     const routes = getRouteHistory();
@@ -2555,7 +2702,7 @@ function quickTransportCustom(route, amount) {
 }
 
 // =================================================================
-// 14. 語音功能（保留 v9 全部，此處僅列出必要輔助函數）
+// 15. 語音功能（保留 v9 全部，此處僅列出必要輔助函數）
 // =================================================================
 function getItemHistory() {
     const txns = appData.transactions || [];
@@ -3130,7 +3277,7 @@ function confirmMarketSegments() {
 }
 
 // =================================================================
-// 15. Type 模式（與 v9 一致，此處省略以節省篇幅，但功能完整保留）
+// 16. Type 模式（與 v9 一致，此處省略以節省篇幅，但功能完整保留）
 // =================================================================
 function openTypeMode() {
     const itemHistory = getItemHistory();
@@ -3376,7 +3523,7 @@ function confirmTypeMode() {
 }
 
 // =================================================================
-// 16. Edit Transaction（與 v9 一致）
+// 17. Edit Transaction（與 v9 一致）
 // =================================================================
 function editTxn(id) {
     const txn = appData.transactions.find(t => t.id === id);
@@ -3507,7 +3654,7 @@ function saveEditTxn(id) {
 }
 
 // =================================================================
-// 17. 導航與通知（不變）
+// 18. 導航與通知（不變）
 // =================================================================
 function navigateTo(section) {
     document.querySelectorAll('.page-section').forEach(el => el.classList.remove('active'));
@@ -3538,7 +3685,7 @@ document.addEventListener('click', function(e) {
 });
 
 // =================================================================
-// 18. 初始化
+// 19. 初始化
 // =================================================================
 function init() {
     const hasAuth = loadFromStorage();
