@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Family Food Log Hub · v6 修復版</title>
+    <title>Family Food Log Hub · v7 修正版</title>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -165,8 +165,8 @@
             z-index:1;
             width:100%;
             max-width:380px;
-            /* v6 修改：背景透明度改為 10% */
-            background:rgba(255,249,240,0.10);
+            /* v7 修改：背景透明度改為 3% (原為 10%) */
+            background:rgba(255,249,240,0.03);
             backdrop-filter:blur(14px);
             -webkit-backdrop-filter:blur(14px);
             border:4px solid var(--outline-brown);
@@ -641,11 +641,23 @@
         /* 其他輔助 */
         .voice-name, .type-name { background:#FAFAFA; }
         .receipt-icon { cursor:pointer; font-size:16px; }
+
+        /* v7 新增：OCR 結果金額高亮提示 */
+        .ocr-amount-hint {
+            font-size:13px;
+            color:#4B5563;
+            background:#F0F8FF;
+            border-radius:10px;
+            padding:6px 12px;
+            border:2px solid #B8D4E8;
+            margin-bottom:8px;
+        }
+        .ocr-amount-hint strong { color:#C0392B; }
     </style>
 </head>
 <body>
 
-<!-- ===== LOGIN（v1 風格） ===== -->
+<!-- ===== LOGIN（v1 風格 · v7 背景透明度 3%） ===== -->
 <div id="loginSection" class="login-page" style="display:flex;">
     <div class="login-container">
         <div class="text-center mb-6">
@@ -921,7 +933,7 @@
 </div>
 
 <!-- =============================================================== -->
-<!-- JAVASCRIPT — v6 修復版（基於 v22 修改）                         -->
+<!-- JAVASCRIPT — v7 修正版（基於 v22 修改）                       -->
 <!-- =============================================================== -->
 <script>
 // =================================================================
@@ -1557,15 +1569,12 @@ function closeModal() {
 }
 
 // =================================================================
-// 10. OCTOPUS OCR（v6 修改：移除 capture，讓用戶自由選擇拍照/相簿）
-//     改良金額提取邏輯，並將 Items 標籤改為 Description
+// 10. OCTOPUS OCR（v7 修正：prompt 精準 + 金額後處理驗證）
 // =================================================================
 function openOCRScanner() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
-    // v6 修改：移除 capture 屬性，讓用戶在手機上自由選擇「拍照」或「從相簿選擇」
-    // input.capture = 'environment';  // 已移除
     input.onchange = async function(e) {
         const file = e.target.files[0];
         if (!file) return;
@@ -1585,18 +1594,21 @@ function openOCRScanner() {
                 reader.onload = (ev) => resolve(ev.target.result);
                 reader.readAsDataURL(file);
             });
+            // v7 改良 prompt：明確指示提取「扣除金額」或「總計」作為 amount
             const response = await fetch('/.netlify/functions/ocr-proxy', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     imageBase64: base64Data,
-                    prompt: `Extract from this Hong Kong receipt:
-                        - amount (total payment amount, in HKD, number only)
-                        - store (shop name)
-                        - date (transaction date)
-                        - items (brief summary of items bought)
+                    prompt: `Extract from this Hong Kong receipt.
+                        - amount: the ACTUAL PAYMENT AMOUNT. Look for "扣除金額" (deducted amount) or "總計" (total) — these are the amount actually paid from Octopus card.
+                          IMPORTANT: DO NOT use "購物總金額" or "本次購物總價" as these are NOT the payment amount (they may be points or membership numbers).
+                          The amount should be a reasonable value like $10-$500.
+                        - store: shop name
+                        - date: transaction date
+                        - items: list of items with prices, and also include the "總計" and "扣除金額" lines if present.
                         Return JSON only with keys: amount, store, date, items.
-                        Do NOT include balance. If a field is not found, return null.`,
+                        If a field is not found, return null.`,
                     model: 'qwen-vl-ocr'
                 })
             });
@@ -1615,6 +1627,7 @@ function openOCRScanner() {
             try {
                 parsedData = JSON.parse(rawContent);
             } catch (parseErr) {
+                // 嘗試從文本中提取
                 const amountMatch = rawContent.match(/amount[\"\']?\s*[:：]\s*(\d+(\.\d+)?)/i);
                 const storeMatch = rawContent.match(/store[\"\']?\s*[:：]\s*[\"\']?([^\"\'\n,}]+)/i);
                 const dateMatch = rawContent.match(/date[\"\']?\s*[:：]\s*[\"\']?([^\"\'\n,}]+)/i);
@@ -1626,20 +1639,48 @@ function openOCRScanner() {
                     items: itemsMatch ? itemsMatch[1].trim() : null
                 };
             }
-            // v6 修改：智能金額提取 — 如果 amount 為 null，但 items 中含有金額，則自動提取
-            if (parsedData.amount === null || parsedData.amount === undefined || isNaN(parsedData.amount)) {
+
+            // v7 新增：後處理驗證 — 從 items 中提取「總計」或「扣除金額」作為金額
+            let correctedAmount = null;
+            if (parsedData.items) {
+                // 嘗試匹配「總計： $XX.XX」或「扣除金額： $XX.XX」
+                const totalMatch = parsedData.items.match(/總計[：:]\s*\$?(\d+(\.\d+)?)/i);
+                const deductMatch = parsedData.items.match(/扣除金額[：:]\s*\$?(\d+(\.\d+)?)/i);
+                if (deductMatch) {
+                    correctedAmount = parseFloat(deductMatch[1]);
+                } else if (totalMatch) {
+                    correctedAmount = parseFloat(totalMatch[1]);
+                }
+                // 如果從 items 中提取到金額，且與 AI 提取的不同，使用 items 中的金額
+                if (correctedAmount !== null && !isNaN(correctedAmount) && correctedAmount > 0) {
+                    // 如果 AI 提取的金額與修正金額不同，用修正金額
+                    if (parsedData.amount === null || parsedData.amount === undefined || isNaN(parsedData.amount) ||
+                        Math.abs(parsedData.amount - correctedAmount) > 0.01) {
+                        parsedData.amount = correctedAmount;
+                        // 從 items 中移除已提取的金額行，避免重複
+                        parsedData.items = parsedData.items.replace(/總計[：:]\s*\$?(\d+(\.\d+)?)/i, '');
+                        parsedData.items = parsedData.items.replace(/扣除金額[：:]\s*\$?(\d+(\.\d+)?)/i, '');
+                        parsedData.items = parsedData.items.replace(/，\s*$/, '').replace(/\n\s*$/, '');
+                    }
+                }
+            }
+
+            // v7 額外：如果金額仍然無效，嘗試從 items 中提取任意數字（原智能金額邏輯）
+            if (parsedData.amount === null || parsedData.amount === undefined || isNaN(parsedData.amount) || parsedData.amount <= 0) {
                 const itemsText = parsedData.items || '';
                 const amountInItems = itemsText.match(/(\d+(\.\d+)?)/);
                 if (amountInItems) {
                     const extracted = parseFloat(amountInItems[1]);
-                    if (!isNaN(extracted) && extracted > 0) {
+                    if (!isNaN(extracted) && extracted > 0 && extracted < 10000) {
                         parsedData.amount = extracted;
-                        // 從 items 中移除金額數字，避免重複
                         parsedData.items = itemsText.replace(amountInItems[0], '').trim();
                     }
                 }
             }
+
+            // 確保 amount 是數字
             if (parsedData.amount) parsedData.amount = parseFloat(parsedData.amount);
+
             showOCRResult(parsedData, fullDataURL, null);
         } catch (err) {
             hideLoading();
@@ -1652,7 +1693,6 @@ function openOCRScanner() {
 
 function showOCRResult(data, imageBase64, errorMsg) {
     window._ocrImageBase64 = imageBase64;
-    // v6 修改：使用獨立分類歷史
     const stores = getStoreHistory();
     const datalistId = 'ocrStoreDatalist';
 
@@ -1660,6 +1700,15 @@ function showOCRResult(data, imageBase64, errorMsg) {
         <button class="modal-close" onclick="closeModal()" ontouchstart="closeModal()">✕</button>
         <div class="modal-title">📸 OCR Result</div>
     `;
+
+    // v7 新增：金額提示區
+    let amountHint = '';
+    if (data && data.amount && !errorMsg) {
+        amountHint = `<div class="ocr-amount-hint">💡 <strong>Amount extracted:</strong> $${data.amount.toFixed(2)} (from "扣除金額" or "總計")</div>`;
+    } else if (errorMsg) {
+        amountHint = `<div class="ocr-amount-hint" style="background:#FFF0F0;border-color:#EA4335;">⚠️ ${errorMsg}</div>`;
+    }
+
     if (errorMsg) {
         html += `<div class="bg-red-100 text-red-700 p-3 rounded-xl mb-3 font-bold">⚠️ ${errorMsg}</div>`;
         html += `
@@ -1679,6 +1728,7 @@ function showOCRResult(data, imageBase64, errorMsg) {
                 <img src="${imageBase64}" style="max-height:120px;border-radius:12px;border:3px solid var(--outline-brown);" />
             </div>`;
         }
+        html += amountHint;
         html += `
             <div class="bg-gray-50 rounded-2xl p-4 space-y-3 border-2 border-wood-light">
                 <div><label class="text-sm text-gray-500 font-bold">💰 Amount</label><input type="number" id="ocrEditAmount" value="${data?.amount || ''}" step="0.1" /></div>
@@ -1687,7 +1737,6 @@ function showOCRResult(data, imageBase64, errorMsg) {
                     <datalist id="${datalistId}">${stores.map(s=>`<option value="${s}">`).join('')}</datalist>
                 </div>
                 <div><label class="text-sm text-gray-500 font-bold">📅 Date</label><input type="date" id="ocrEditDate" value="${data?.date || ''}" /></div>
-                <!-- v6 修改：將 Items 改為 Description -->
                 <div><label class="text-sm text-gray-500 font-bold">📝 Description</label><input type="text" id="ocrEditItems" value="${data?.items || ''}" /></div>
             </div>
         `;
@@ -1698,7 +1747,7 @@ function showOCRResult(data, imageBase64, errorMsg) {
             <button class="btn-macaron-outline flex-1" onclick="closeModal();openOCRScanner();" ontouchstart="closeModal();openOCRScanner();">🔄 Re-scan</button>
             <button class="btn-macaron-outline flex-1" onclick="closeModal()" ontouchstart="closeModal()">Cancel</button>
         </div>
-        ${errorMsg ? `<div class="text-xs text-gray-400 mt-2">💡 請手動輸入金額後確認</div>` : ''}
+        ${errorMsg ? `<div class="text-xs text-gray-400 mt-2">💡 請手動輸入金額後確認</div>` : `<div class="text-xs text-gray-400 mt-2">💡 金額已自動從「扣除金額」或「總計」提取，可手動修改</div>`}
     `;
     openModal(html);
 }
@@ -1799,7 +1848,7 @@ function doCashIn() {
 }
 
 // =================================================================
-// 12. Transport & Routes（v6 修改：Route 使用獨立歷史）
+// 12. Transport & Routes（不變）
 // =================================================================
 function openTransport() {
     const routes = getRouteHistory();
@@ -1941,12 +1990,11 @@ function quickTransportCustom(route, amount) {
 }
 
 // =================================================================
-// 13. 語音功能（不變，但內部使用獨立歷史）
+// 13. 語音功能（不變）
 // =================================================================
 let speechRec = null, mediaRecorder = null, audioChunks = [], isSpeechRecording = false;
 let currentTranscript = '', currentAudioBase64 = null, voiceMode = 'single';
 
-// v6 修改：使用獨立分類歷史
 function getItemHistory() {
     const txns = appData.transactions || [];
     const items = new Set();
@@ -2133,7 +2181,6 @@ function processVoiceResult(text, allowAddRow = true) {
     showVoiceResultTable(items, '🎤 語音結果 (可編輯)', allowAddRow);
 }
 
-// v6 修改：Voice 使用獨立歷史
 function showVoiceResultTable(items, title, allowAddRow = true) {
     const itemHistory = getItemHistory();
     const catHistory = getCategoryHistory();
@@ -2526,7 +2573,7 @@ function confirmMarketSegments() {
 }
 
 // =================================================================
-// 17. Type 模式（v6 修改：使用獨立分類歷史）
+// 17. Type 模式（不變）
 // =================================================================
 function openTypeMode() {
     const itemHistory = getItemHistory();
@@ -2772,7 +2819,7 @@ function confirmTypeMode() {
 }
 
 // =================================================================
-// 18. Edit Transaction（v6 修改：使用獨立歷史）
+// 18. Edit Transaction（不變）
 // =================================================================
 function editTxn(id) {
     const txn = appData.transactions.find(t => t.id === id);
@@ -2790,7 +2837,6 @@ function editTxn(id) {
     const itemLabel = isOctopus ? '📝 Item (optional)' : '📝 Item';
     const descLabel = isOctopus ? '📝 Description (main for Octopus)' : '📝 Description (optional)';
 
-    // v6 修改：獨立歷史
     const itemHistory = getItemHistory();
     const catHistory = getCategoryHistory();
     const placeHistory = getPlaceHistory();
